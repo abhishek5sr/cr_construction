@@ -1,0 +1,98 @@
+*{
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+.navbar{
+    display:flex;
+    justify-content: space-around;
+    background-color:#FEF3E2;
+    color:#efb400;
+    font-size: 20px;
+    font-weight: 700;
+    border-bottom: #efb400 2px solid;
+    position: fixed;
+    width: 100%;
+}
+.nav{
+    display: flex;
+    
+}
+#loginBtn{
+    height: 40px;
+    width: 200px;
+    background-color: #fce191;
+    text-align: center;
+    padding-top: 5px;
+    font-weight: 500;
+    font-size: 20px;
+}
+#loginBtn:hover{
+    background-color:#FEF3E2;
+    cursor: pointer;
+}
+
+.navlinks{
+    padding:20px 0 0 20px;
+
+}
+.nav-login{
+     padding:15px 0 0 0;
+}
+.section{
+    display: flex;
+    background-color:#FEF3E2;
+    height: 50px;
+    justify-content: space-around;
+    padding-top: 120px;
+}
+#s1, #s2, #s3, #s4{
+    height: 50px;
+    width: 200px;
+    background-color: #fce191;
+    text-align: center;
+    padding-top: 5px;
+    font-weight: 500;
+    font-size: 20px;
+}
+
+.section1{
+    background-color: #FEF3E2;
+
+}
+.section button{
+    height: 30px;
+    width: 130px;
+   
+}
+.section-banner{
+    padding: 100px 100px 50px 150px;
+    background-color: #FEF3E2;
+}
+.container{
+    display: grid;
+    grid-template-columns:1fr 1fr;
+    padding: 50px 150px 50px 150px;
+    background-color: #FEF3E2;
+}
+.c1{
+    height:350px;
+    margin-right: 50px;
+    background-color: #fce191;
+}
+.c2{
+    background-color: #fce191;
+}
+/* Add this class to your existing style.css */
+.hidden {
+    display: none !important;
+}
+
+/* Optional: Add some styling for the profile link to look better */
+.navlinks a {
+    text-decoration: none;
+    color: inherit;
+}
+.navlinks i {
+    margin-right: 5px;
+}

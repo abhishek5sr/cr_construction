@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C&R Building Solutions</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        /* Add this necessary class inline or in style.css */
+        .hidden { display: none !important; }
+    </style>
+</head>
+
+<body>
+    <div class="navbar">
+        <div class="logo">
+            <img src="Screenshot 2025-09-23 204654.png" alt="txt" height="70px" width="200px">
+        </div>
+        <div class="nav">
+            <div class="navlinks"><p>About Us</p></div>
+            <div class="navlinks"><p>Services</p></div>
+            <div class="navlinks"><p>Blog</p></div>
+            <div class="navlinks"><p>Customer</p></div>
+            <div class="navlinks"><p>Sustainability</p></div>
+            <div class="navlinks"><p>Contact Us</p></div>
+            <div class="navlinks"><p>FAQs</p></div>
+        </div>
+
+        <div class="nav-login">
+            <button id="loginBtn">Login Here</button> 
+
+            <a href="profile.html" id="profileLink" class="navlinks hidden">
+                <i class="fa-solid fa-user-circle"></i>
+                <span id="profileName">Profile</span>
+            </a>
+        </div>
+        </div>
+    <div class="main">
+        <div class="section">
+            <Button id="s1">For Home Button</Button>
+            <Button id="s2">For Infrastructure</Button>
+            <Button id="s3">For corporate</Button>
+        </div>
+        <div class="section-banner">
+            <img src="BUILD.png" alt="" height="650px" width="1200px">
+        </div>
+        <div class="container">
+            <div class="c1">
+                <i class="fa-solid fa-calculator"></i>
+                <h1>Product Cost Estimator</h1>
+            </div>
+            <div class="c2">
+                <i class="fa-solid fa-location-dot"></i>
+                <h1>Store Locator</h1>
+            </div>
+        </div>
+        <div class="products-section">
+            <div class="products">
+                <div class="product-card">
+                    <img src="cement.png" alt="Cement" height="200px" width="200px">
+                    <h2>Cement</h2>
+                    <p>High-quality cement for all your construction needs.</p>
+                    <button>Shop Now</button>
+                </div>
+                <div class="product-card">
+                    <img src="bricks.png" alt="Bricks" height="200px" width="200px">
+                    <h2>Bricks</h2>
+                    <p>Durable and reliable bricks for building strong structures.</p>
+                    <button>Shop Now</button>
+                </div>
+                <div class="product-card">
+                    <img src="steel.png" alt="Steel" height="200px" width="200px">
+                    <h2>Steel</h2>
+                    <p>Premium steel products for construction and infrastructure projects.</p>
+                    <button>Shop Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginBtn = document.getElementById('loginBtn');
+            const profileLink = document.getElementById('profileLink');
+            const profileNameSpan = document.getElementById('profileName');
+            loginBtn.onclick = function() {
+                window.location.href = 'login.html';
+            };
+            const loggedInUser = localStorage.getItem('loggedInUser');
+            if (loggedInUser) {
+                const user = JSON.parse(loggedInUser);
+                loginBtn.style.display = 'none';
+                profileLink.classList.remove('hidden');
+                profileNameSpan.textContent = user.name + ' Profile';
+            }
+        });
+    </script>
+</body>
+</html>

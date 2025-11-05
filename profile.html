@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="login.css"> <style>
+        .profile-card {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+        }
+        .profile-card h1 { color: #efb400; margin-bottom: 20px; }
+        .profile-card p { font-size: 1.1em; color: #555; }
+        .profile-card button { margin-top: 20px; width: 50%; background-color: #f44336; }
+        .profile-card button:hover { background-color: #d32f2f; }
+    </style>
+</head>
+<body>
+    <div class="login-container profile-card">
+        <h1>Your Profile</h1>
+        <p><strong>Name:</strong> <span id="profileUserName"></span></p>
+        <p><strong>User ID:</strong> <span id="profileUserID"></span></p>
+        <button id="logoutBtn">Log Out</button>
+    </div>
+
+    <script>
+        // Check local storage for user data
+        const loggedInUser = localStorage.getItem('loggedInUser');
+        const userData = loggedInUser ? JSON.parse(loggedInUser) : null;
+
+        if (userData) {
+            // Display user info
+            document.getElementById('profileUserName').textContent = userData.name;
+            document.getElementById('profileUserID').textContent = userData.id;
+        } else {
+            // If no user is logged in, redirect to login page
+            alert('You must log in to view the profile.');
+            window.location.href = 'login.html';
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('loggedInUser');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

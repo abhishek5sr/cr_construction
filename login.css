@@ -1,6 +1,7 @@
+/* login.css - Modern */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #FEF3E2;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #FEF3E2 0%, #FCE191 100%);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -9,72 +10,85 @@ body {
 }
 
 .login-container {
-    background-color: #fce191;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 300px;
-    color:#efb400 ;
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    width: 380px;
+    text-align: center;
+    backdrop-filter: blur(10px);
 }
 
-h2 {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #333;
+.login-container h2 {
+    color: #8B6F47;
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
 }
 
 .input-group {
-    margin-bottom: 15px;
+    margin-bottom: 1.2rem;
+    text-align: left;
 }
 
 .input-group label {
     display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: #555;
+    margin-bottom: 0.5rem;
+    color: #8B6F47;
+    font-weight: 600;
 }
 
-.input-group input[type="text"],
-.input-group input[type="password"] {
+.input-group input {
     width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box; /* Includes padding in the element's total width and height */
+    padding: 0.9rem;
+    border: 2px solid #EFB400;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #D4A017;
+    box-shadow: 0 0 0 4px rgba(239, 180, 0, 0.2);
 }
 
 button {
     width: 100%;
-    padding: 10px;
-    background-color:#FEF3E2;
-    color: black;
+    padding: 0.9rem;
+    background: #EFB400;
+    color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
     cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(239, 180, 0, 0.3);
 }
 
 button:hover {
-    background-color: #af8f2c;
+    background: #D4A017;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(239, 180, 0, 0.4);
 }
 
 .message {
-    text-align: center;
-    margin-top: 15px;
-    padding: 10px;
-    border-radius: 4px;
-    font-weight: bold;
+    margin-top: 1rem;
+    padding: 0.8rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
 }
 
 .message.success {
+    background: #d4edda;
     color: #155724;
-    background-color: #d4edda;
     border: 1px solid #c3e6cb;
 }
 
 .message.error {
+    background: #f8d7da;
     color: #721c24;
-    background-color: #f8d7da;
     border: 1px solid #f5c6cb;
 }

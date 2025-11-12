@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>C&R Building Solutions</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="logo">
+      <img src="Screenshot 2025-09-23 204654.png" alt="C&R Logo" height="70px" width="200px">
+    </div>
+
+    <div class="nav">
+      <div class="navlinks"><p>About Us</p></div>
+      <div class="navlinks"><p>Services</p></div>
+      <div class="navlinks"><p>Blog</p></div>
+      <div class="navlinks"><p>Customer</p></div>
+      <div class="navlinks"><p>Sustainability</p></div>
+      <div class="navlinks"><p>Contact Us</p></div>
+      <div class="navlinks"><p>FAQs</p></div>
+    </div>
+
+    <!-- LOGIN + SIGN UP -->
+    <div class="nav-auth">
+      <a href="login.html" id="loginBtn" class="auth-btn login">Login</a>
+      <a href="register.html" id="signupBtn" class="auth-btn signup">Sign Up</a>
+
+      <!-- Profile (after login) -->
+      <a href="profile.html" id="profileLink" class="navlinks profile-link hidden">
+        <i class="fa-solid fa-user-circle"></i>
+        <span id="profileName">Profile</span>
+      </a>
+    </div>
+
+    <!-- Cart Icon -->
+    <div class="nav-cart">
+      <i id="cartIcon" class="fa-solid fa-shopping-cart"></i>
+      <span id="cartCount" class="cart-badge">0</span>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <div class="section">
+      <button id="s1">For Home</button>
+      <button id="s2">For Infrastructure</button>
+      <button id="s3">For Corporate</button>
+    </div>
+
+    <div class="section-banner">
+      <img src="BUILD.png" alt="Build Your Dreams" height="650px" width="1200px">
+    </div>
+
+    <div class="container">
+      <div class="c1">
+        <i class="fa-solid fa-calculator"></i>
+        <h1>Product Cost Estimator</h1>
+      </div>
+      <div class="c2">
+        <i class="fa-solid fa-location-dot"></i>
+        <h1>Store Locator</h1>
+      </div>
+    </div>
+
+    <div class="products-section">
+      <div class="products" id="productContainer">
+        <!-- Products loaded via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- CART MODAL -->
+  <div id="cartModal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Your Cart</h2>
+      <div id="cartItems"></div>
+      <div class="cart-total">
+        <strong>Total: ₹<span id="cartTotal">0</span></strong>
+      </div>
+      <button id="checkoutBtn">Proceed to Checkout</button>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script>
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+    // Update cart badge
+    function updateCartBadge() {
+      const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+      document.getElementById('cartCount').textContent = totalItems;
+    }
+
+    // Load user profile if logged in
+    document.addEventListener('DOMContentLoaded', () => {
+      const loggedInUser = localStorage.getItem('loggedInUser');
+      if (loggedInUser) {
+        const user = JSON.parse(loggedInUser);
+        document.getElementById('loginBtn').classList.add('hidden');
+        document.getElementById('signupBtn').classList.add('hidden');
+        document.getElementById('profileLink').classList.remove('hidden');
+        document.getElementById('profileName').textContent = user.name;
+      }
+
+      updateCartBadge();
+      loadProducts();
+      setupCartModal();
+    });
+
+    // Load products
+    async function loadProducts() {
+      try {
+        const res = await fetch('http://localhost:3000/api/products');
+        const products = await res.json();
+        const container = document.getElementById('productContainer');
+        container.innerHTML = products.map(p => `
+          <div class="product-card">
+            <img src="${p.image}" alt="${p.name}" loading="lazy">
+            <h2>${p.name}</h2>
+            <p>${p.description}</p>
+            <p class="price">₹${p.price}</p>
+            <div class="quantity-controls">
+              <button onclick="updateQuantity('${p._id}', -1)">-</button>
+              <span id="qty-${p._id}">0</span>
+              <button onclick="updateQuantity('${p._id}', 1)">+</button>
+            </div>
+            <button class="add-cart-btn" onclick="addToCart('${p._id}')">Add to Cart</button>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Failed to load products');
+      }
+    }
+
+    // Cart functions
+    function addToCart(id) {
+      const existing = cart.find(item => item.id === id);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({ id, quantity: 1 });
+      }
+      localStorage.setItem('cart', JSON.stringify(cart));
+      updateCartBadge();
+      showNotification('Added to cart!');
+    }
+
+    function updateQuantity(id, change) {
+      const item = cart.find(i => i.id === id);
+      if (item) {
+        item.quantity = Math.max(0, item.quantity + change);
+        if (item.quantity === 0) {
+          cart = cart.filter(i => i.id !== id);
+        }
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCartBadge();
+        loadProducts();
+      }
+    }
+
+    function showNotification(msg) {
+      const notif = document.createElement('div');
+      notif.className = 'notification';
+      notif.textContent = msg;
+      document.body.appendChild(notif);
+      setTimeout(() => notif.remove(), 3000);
+    }
+
+    // Cart Modal
+    function setupCartModal() {
+      const modal = document.getElementById('cartModal');
+      const close = document.querySelector('.close');
+      const cartIcon = document.getElementById('cartIcon');
+      const checkoutBtn = document.getElementById('checkoutBtn');
+
+      cartIcon.onclick = () => {
+        loadCartItems();
+        modal.classList.remove('hidden');
+      };
+
+      close.onclick = () => modal.classList.add('hidden');
+      window.onclick = (e) => { if (e.target === modal) modal.classList.add('hidden'); };
+
+      checkoutBtn.onclick = () => {
+        const user = localStorage.getItem('loggedInUser');
+        if (!user) {
+          alert('Please login to checkout');
+          window.location.href = 'login.html';
+        } else {
+          alert('Checkout functionality coming soon!');
+        }
+      };
+    }
+
+    async function loadCartItems() {
+      if (cart.length === 0) {
+        document.getElementById('cartItems').innerHTML = '<p>Your cart is empty</p>';
+        document.getElementById('cartTotal').textContent = '0';
+        return;
+      }
+
+      const res = await fetch('http://localhost:3000/api/products');
+      const products = await res.json();
+      let total = 0;
+      const items = cart.map(item => {
+        const product = products.find(p => p._id === item.id);
+        if (product) {
+          total += product.price * item.quantity;
+          return `
+            <div class="cart-item">
+              <img src="${product.image}" alt="${product.name}">
+              <div>
+                <h3>${product.name}</h3>
+                <p>₹${product.price} × ${item.quantity}</p>
+              </div>
+              <button onclick="removeFromCart('${item.id}')">×</button>
+            </div>
+          `;
+        }
+      }).join('');
+
+      document.getElementById('cartItems').innerHTML = items;
+      document.getElementById('cartTotal').textContent = total;
+    }
+
+    function removeFromCart(id) {
+      cart = cart.filter(i => i.id !== id);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      updateCartBadge();
+      loadCartItems();
+      loadProducts();
+    }
+  </script>
+</body>
+</html>

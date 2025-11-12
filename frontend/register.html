@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register | C&R Building Solutions</title>
+  <link rel="stylesheet" href="login.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="login-container">
+    <h2>Create Account</h2>
+    <form id="registerForm">
+      <div class="input-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" required />
+      </div>
+      <div class="input-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" required />
+      </div>
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" minlength="6" required />
+      </div>
+      <div class="input-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input type="password" id="confirmPassword" required />
+      </div>
+      <button type="submit">Register</button>
+      <p id="message" class="message"></p>
+      <p style="margin-top: 1rem; font-size: 0.9rem;">
+        Already have an account? <a href="login.html" style="color:#EFB400; font-weight:600;">Log In</a>
+      </p>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('registerForm');
+    const message = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim().toLowerCase();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (password !== confirmPassword) {
+        showMessage('Passwords do not match!', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('http://localhost:3000/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          showMessage('Registered! Check your email to verify.', 'success');
+          setTimeout(() => window.location.href = 'login.html', 2000);
+        } else {
+          showMessage(data.error || 'Registration failed.', 'error');
+        }
+      } catch (err) {
+        showMessage('Server error. Try again later.', 'error');
+      }
+    });
+
+    function showMessage(msg, type) {
+      message.textContent = msg;
+      message.className = `message ${type}`;
+    }
+  </script>
+</body>
+</html>

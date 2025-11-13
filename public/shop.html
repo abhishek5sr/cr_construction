@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shop | C&R Building Solutions</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    .hidden { display: none !important; }
+    .notification { position: fixed; top: 20px; right: 20px; background: #EFB400; color: white; padding: 1rem; border-radius: 8px; z-index: 1000; }
+    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 2rem; padding: 2rem; max-width: 1200px; margin: 0 auto; padding-top: 160px; }
+  </style>
+</head>
+<body>
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="logo">
+      <img src="BUILD.png" alt="C&R Logo" height="70px">
+    </div>
+
+    <div class="nav">
+      <div class="navlinks"><p>About Us</p></div>
+      <div class="navlinks"><p>Services</p></div>
+      <div class="navlinks"><p>Blog</p></div>
+      <div class="navlinks"><p>Customer</p></div>
+      <div class="navlinks"><p>Sustainability</p></div>
+      <div class="navlinks"><p>Contact Us</p></div>
+      <div class="navlinks"><p>FAQs</p></div>
+    </div>
+
+    <div class="nav-auth">
+      <a href="login.html" id="loginBtn" class="auth-btn login">Login</a>
+      <a href="register.html" id="signupBtn" class="auth-btn signup">Sign Up</a>
+      <a href="profile.html" id="profileLink" class="navlinks profile-link hidden">
+        <i class="fa-solid fa-user-circle"></i>
+        <span id="profileName">Profile</span>
+      </a>
+    </div>
+
+    <div class="nav-cart">
+      <i id="cartIcon" class="fa-solid fa-shopping-cart"></i>
+      <span id="cartCount" class="cart-badge">0</span>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <div class="section">
+      <h1 style="text-align: center; color: #8B6F47; margin-bottom: 2rem;">Shop Building Materials</h1>
+      <div id="productsContainer" class="products-grid"></div>
+    </div>
+  </div>
+
+  <!-- CART MODAL -->
+  <div id="cartModal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Your Cart</h2>
+      <div id="cartItems"></div>
+      <p>Total: ₹<span id="cartTotal">0</span></p>
+      <button id="checkoutBtn">Checkout</button>
+    </div>
+  </div>
+
+  <script>
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = localStorage.getItem('loggedInUser');
+      if (user) {
+        const u = JSON.parse(user);
+        document.getElementById('loginBtn').classList.add('hidden');
+        document.getElementById('signupBtn').classList.add('hidden');
+        document.getElementById('profileLink').classList.remove('hidden');
+        document.getElementById('profileName').textContent = u.name;
+      }
+      loadProducts();
+      updateCartBadge();
+      setupCartModal();
+    });
+
+    async function loadProducts() {
+      try {
+        const res = await fetch('/api/products');
+        if (!res.ok) throw new Error('Failed to fetch products');
+        const products = await res.json();
+        const container = document.getElementById('productsContainer');
+        container.innerHTML = products.map(product => `
+          <div class="product-card">
+            <img src="${product.image || 'placeholder.jpg'}" alt="${product.name}">
+            <h2>${product.name}</h2>
+            <p>₹${product.price.toLocaleString()}</p>
+            <div>
+              <button onclick="updateQuantity('${product._id}', -1)">-</button>
+              <span id="quantity-${product._id}">0</span>
+              <button onclick="updateQuantity('${product._id}', 1)">+</button>
+            </div>
+            <button onclick="addToCart('${product._id}')">Add to Cart</button>
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('Error loading products:', error);
+        document.getElementById('productsContainer').innerHTML = '<p>Failed to load products. Try again later.</p>';
+      }
+    }
+
+    function updateCartBadge() {
+      const total = cart.reduce((sum, i) => sum + i.quantity, 0);
+      document.getElementById('cartCount').textContent = total;
+    }
+
+    function showNotification(msg) {
+      const el = document.createElement('div');
+      el.className = 'notification';
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    function updateQuantity(id, change) {
+      const item = cart.find(i => i.id === id);
+      if (item) {
+        item.quantity = Math.max(0, item.quantity + change);
+        if (item.quantity === 0) cart = cart.filter(i => i.id !== id);
+      } else if (change > 0) {
+        cart.push({ id, quantity: 1 });
+      }
+      localStorage.setItem('cart', JSON.stringify(cart));
+      updateCartBadge();
+      document.getElementById(`quantity-${id}`).textContent = (item?.quantity || 0) + (change > 0 ? change : 0);
+    }
+
+    function addToCart(id) {
+      updateQuantity(id, 1);
+      showNotification('Added to cart!');
+    }
+
+    function setupCartModal() {
+      const modal = document.getElementById('cartModal');
+      const close = document.querySelector('.close');
+      const cartIcon = document.getElementById('cartIcon');
+      const checkoutBtn = document.getElementById('checkoutBtn');
+
+      cartIcon.onclick = () => { loadCartItems(); modal.classList.remove('hidden'); };
+      close.onclick = () => modal.classList.add('hidden');
+      window.onclick = (e) => { if (e.target === modal) modal.classList.add('hidden'); };
+
+      checkoutBtn.onclick = () => {
+        const user = localStorage.getItem('loggedInUser');
+        if (!user) {
+          alert('Login required for checkout');
+          window.location.href = 'login.html';
+        } else {
+          alert('Checkout feature coming soon!');
+        }
+      };
+    }
+
+    async function loadCartItems() {
+      const itemsDiv = document.getElementById('cartItems');
+      const totalSpan = document.getElementById('cartTotal');
+
+      if (cart.length === 0) {
+        itemsDiv.innerHTML = '<p>Your cart is empty</p>';
+        totalSpan.textContent = '0';
+        return;
+      }
+
+      const res = await fetch('/api/products');
+      const products = await res.json();
+
+      let total = 0;
+      const html = cart
+        .map(item => {
+          const p = products.find(pr => pr._id === item.id);
+          if (!p) return '';
+          total += p.price * item.quantity;
+          return `
+            <div class="cart-item">
+              <img src="${p.image || 'placeholder.jpg'}" alt="${p.name}">
+              <div>
+                <h4>${p.name}</h4>
+                <p>₹${p.price} × ${item.quantity}</p>
+              </div>
+              <button onclick="removeFromCart('${item.id}')">×</button>
+            </div>
+          `;
+        })
+        .join('');
+
+      itemsDiv.innerHTML = html;
+      totalSpan.textContent = total.toLocaleString();
+    }
+
+    function removeFromCart(id) {
+      cart = cart.filter(i => i.id !== id);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      updateCartBadge();
+      loadCartItems();
+    }
+
+    window.updateQuantity = updateQuantity;
+    window.addToCart = addToCart;
+    window.removeFromCart = removeFromCart;
+  </script>
+  <script src="script.js"></script>
+</body>
+</html>

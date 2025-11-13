@@ -8,9 +8,11 @@ export default async function handler(req, res) {
     await client.connect();
     const db = client.db('cr_building');
     const products = await db.collection('products').find({}).toArray();
+    await client.close();
     res.status(200).json(products);
   } catch (error) {
+    await client.close();
     console.error(error);
-    res.status(500).json({ error: 'Failed to fetch products' });
+    res.status(500).json({ error: 'Failed to fetch products. Try again later.' });
   }
 }

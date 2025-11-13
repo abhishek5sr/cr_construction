@@ -6,10 +6,7 @@ const client = new MongoClient(uri);
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.EMAIL_PASS
-  }
+  auth: { user: process.env.EMAIL, pass: process.env.EMAIL_PASS }
 });
 
 export default async function handler(req, res) {
@@ -29,7 +26,7 @@ export default async function handler(req, res) {
 
     await db.collection('users').updateOne(
       { email: email.toLowerCase() },
-      { $set: { otp, otpExpires: Date.now() + 5 * 60 * 1000 } }
+      { $set: { otp, otpExpires: new Date(Date.now() + 5 * 60 * 1000) } }
     );
 
     await transporter.sendMail({
@@ -39,9 +36,11 @@ export default async function handler(req, res) {
       html: `<p>Your login OTP: <strong>${otp}</strong></p><p>Valid for 5 mins.</p>`
     });
 
+    await client.close();
     res.status(200).json({ message: 'OTP sent!' });
   } catch (error) {
+    await client.close();
     console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error. Try again later.' });
   }
 }

@@ -37,9 +37,11 @@ export default async function handler(req, res) {
       { projection: { password: 0, otp: 0, otpExpires: 0 } }
     );
 
+    await client.close();
     res.status(200).json({ message: 'Success', user: userData });
   } catch (error) {
+    await client.close();
     console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error. Try again later.' });
   }
 }

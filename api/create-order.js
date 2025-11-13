@@ -27,6 +27,7 @@ export default async function handler(req, res) {
       receipt: `receipt_${Date.now()}`
     });
 
+    await client.close();
     res.status(200).json({
       id: order.id,
       amount: order.amount,
@@ -35,7 +36,8 @@ export default async function handler(req, res) {
       quantity
     });
   } catch (error) {
+    await client.close();
     console.error(error);
-    res.status(500).json({ error: 'Payment failed' });
+    res.status(500).json({ error: 'Payment failed. Try again later.' });
   }
 }

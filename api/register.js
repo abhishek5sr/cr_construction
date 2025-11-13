@@ -1,4 +1,3 @@
-// api/register.js  (keep this – it already hashes password)
 import { MongoClient } from 'mongodb';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcryptjs';
@@ -32,7 +31,7 @@ export default async function handler(req, res) {
       password: hashedPassword,
       verified: false,
       otp,
-      otpExpires: Date.now() + 10 * 60 * 1000,
+      otpExpires: new Date(Date.now() + 10 * 60 * 1000),
       createdAt: new Date()
     });
 
@@ -43,9 +42,11 @@ export default async function handler(req, res) {
       html: `<p>OTP: <strong>${otp}</strong> (10 mins)</p>`
     });
 
+    await client.close();
     res.status(200).json({ message: 'Check email for OTP' });
   } catch (e) {
+    await client.close();
     console.error(e);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error. Try again later.' });
   }
 }

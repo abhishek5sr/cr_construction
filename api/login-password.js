@@ -1,4 +1,3 @@
-// api/login-password.js
 import { MongoClient } from 'mongodb';
 import bcrypt from 'bcryptjs';
 
@@ -28,15 +27,16 @@ export default async function handler(req, res) {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ error: 'Invalid email or password' });
 
-    // Remove sensitive fields
     const { password: _, otp, otpExpires, ...safeUser } = user;
 
+    await client.close();
     res.status(200).json({
       message: 'Login successful',
       user: safeUser
     });
   } catch (e) {
+    await client.close();
     console.error(e);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error. Try again later.' });
   }
 }

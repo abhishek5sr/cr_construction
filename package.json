@@ -1,0 +1,16 @@
+{
+  "name": "cr-building-solutions",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node",
+    "build": "echo 'Ready for Vercel'"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "mongodb": "^6.6.0",
+    "nodemailer": "^7.0.10",
+    "razorpay": "^2.9.4"
+  }
+}

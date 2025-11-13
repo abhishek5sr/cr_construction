@@ -9,13 +9,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     .hidden { display: none !important; }
+    .notification { position: fixed; top: 20px; right: 20px; background: #EFB400; color: white; padding: 1rem; border-radius: 8px; z-index: 1000; }
   </style>
 </head>
 <body>
   <!-- NAVBAR -->
   <div class="navbar">
     <div class="logo">
-      <img src="Screenshot 2025-09-23 204654.png" alt="C&R Logo" height="70px" width="200px">
+      <img src="BUILD.png" alt="C&R Logo" height="70px">
     </div>
 
     <div class="nav">
@@ -28,19 +29,15 @@
       <div class="navlinks"><p>FAQs</p></div>
     </div>
 
-    <!-- LOGIN + SIGN UP -->
     <div class="nav-auth">
       <a href="login.html" id="loginBtn" class="auth-btn login">Login</a>
       <a href="register.html" id="signupBtn" class="auth-btn signup">Sign Up</a>
-
-      <!-- Profile (after login) -->
       <a href="profile.html" id="profileLink" class="navlinks profile-link hidden">
         <i class="fa-solid fa-user-circle"></i>
         <span id="profileName">Profile</span>
       </a>
     </div>
 
-    <!-- Cart Icon -->
     <div class="nav-cart">
       <i id="cartIcon" class="fa-solid fa-shopping-cart"></i>
       <span id="cartCount" class="cart-badge">0</span>
@@ -60,11 +57,11 @@
     </div>
 
     <div class="container">
-      <div class="c1">
-        <i class="fa-solid fa-calculator"></i>
-        <h1>Product Cost Estimator</h1>
+      <div class="c1" onclick="window.location.href='shop.html'">
+        <i class="fa-solid fa-shopping-bag"></i>
+        <h1>Shop Now</h1>
       </div>
-      <div class="c2">
+      <div class="c2" onclick="openMap()">
         <i class="fa-solid fa-location-dot"></i>
         <h1>Store Locator</h1>
       </div>
@@ -80,7 +77,7 @@
   <!-- CART MODAL -->
   <div id="cartModal" class="modal hidden">
     <div class="modal-content">
-      <span class="close">&times;</span>
+      <span class="close">×</span>
       <h2>Your Cart</h2>
       <div id="cartItems"></div>
       <div class="cart-total">
@@ -90,17 +87,14 @@
     </div>
   </div>
 
-  <!-- SCRIPTS -->
   <script>
     let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-    // Update cart badge
     function updateCartBadge() {
       const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
       document.getElementById('cartCount').textContent = totalItems;
     }
 
-    // Load user profile if logged in
     document.addEventListener('DOMContentLoaded', () => {
       const loggedInUser = localStorage.getItem('loggedInUser');
       if (loggedInUser) {
@@ -110,16 +104,14 @@
         document.getElementById('profileLink').classList.remove('hidden');
         document.getElementById('profileName').textContent = user.name;
       }
-
-      updateCartBadge();
       loadProducts();
+      updateCartBadge();
       setupCartModal();
     });
 
-    // Load products
     async function loadProducts() {
       try {
-        const res = await fetch('http://localhost:3000/api/products');
+        const res = await fetch('/api/products');
         const products = await res.json();
         const container = document.getElementById('productContainer');
         container.innerHTML = products.map(p => `
@@ -127,12 +119,8 @@
             <img src="${p.image}" alt="${p.name}" loading="lazy">
             <h2>${p.name}</h2>
             <p>${p.description}</p>
-            <p class="price">₹${p.price}</p>
-            <div class="quantity-controls">
-              <button onclick="updateQuantity('${p._id}', -1)">-</button>
-              <span id="qty-${p._id}">0</span>
-              <button onclick="updateQuantity('${p._id}', 1)">+</button>
-            </div>
+            <p class="price">₹${p.price.toLocaleString()}</p>
+            <button class="buy-now-btn" onclick="buyNow('${p._id}')">Buy Now</button>
             <button class="add-cart-btn" onclick="addToCart('${p._id}')">Add to Cart</button>
           </div>
         `).join('');
@@ -141,30 +129,48 @@
       }
     }
 
-    // Cart functions
+    async function buyNow(productId) {
+      const user = localStorage.getItem('loggedInUser');
+      if (!user) {
+        alert('Please login first!');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId })
+        });
+        const order = await res.json();
+
+        const options = {
+          key: 'rzp_test_YOUR_KEY', // Replace after getting from Razorpay
+          amount: order.amount,
+          currency: order.currency,
+          name: 'C&R Building Solutions',
+          order_id: order.id,
+          description: `Buy ${order.product.name}`,
+          handler: async function(response) {
+            alert('Payment Successful!');
+            window.location.href = 'profile.html';
+          },
+          prefill: { name: JSON.parse(user).name }
+        };
+        new Razorpay(options).open();
+      } catch (err) {
+        alert('Payment failed');
+      }
+    }
+
     function addToCart(id) {
       const existing = cart.find(item => item.id === id);
-      if (existing) {
-        existing.quantity += 1;
-      } else {
-        cart.push({ id, quantity: 1 });
-      }
+      if (existing) existing.quantity += 1;
+      else cart.push({ id, quantity: 1 });
       localStorage.setItem('cart', JSON.stringify(cart));
       updateCartBadge();
       showNotification('Added to cart!');
-    }
-
-    function updateQuantity(id, change) {
-      const item = cart.find(i => i.id === id);
-      if (item) {
-        item.quantity = Math.max(0, item.quantity + change);
-        if (item.quantity === 0) {
-          cart = cart.filter(i => i.id !== id);
-        }
-        localStorage.setItem('cart', JSON.stringify(cart));
-        updateCartBadge();
-        loadProducts();
-      }
     }
 
     function showNotification(msg) {
@@ -175,29 +181,20 @@
       setTimeout(() => notif.remove(), 3000);
     }
 
-    // Cart Modal
     function setupCartModal() {
       const modal = document.getElementById('cartModal');
       const close = document.querySelector('.close');
       const cartIcon = document.getElementById('cartIcon');
       const checkoutBtn = document.getElementById('checkoutBtn');
 
-      cartIcon.onclick = () => {
-        loadCartItems();
-        modal.classList.remove('hidden');
-      };
-
+      cartIcon.onclick = () => { loadCartItems(); modal.classList.remove('hidden'); };
       close.onclick = () => modal.classList.add('hidden');
       window.onclick = (e) => { if (e.target === modal) modal.classList.add('hidden'); };
 
       checkoutBtn.onclick = () => {
         const user = localStorage.getItem('loggedInUser');
-        if (!user) {
-          alert('Please login to checkout');
-          window.location.href = 'login.html';
-        } else {
-          alert('Checkout functionality coming soon!');
-        }
+        if (!user) { alert('Login to checkout'); window.location.href = 'login.html'; }
+        else alert('Checkout coming soon!');
       };
     }
 
@@ -207,38 +204,24 @@
         document.getElementById('cartTotal').textContent = '0';
         return;
       }
-
-      const res = await fetch('http://localhost:3000/api/products');
+      const res = await fetch('/api/products');
       const products = await res.json();
       let total = 0;
       const items = cart.map(item => {
         const product = products.find(p => p._id === item.id);
         if (product) {
           total += product.price * item.quantity;
-          return `
-            <div class="cart-item">
-              <img src="${product.image}" alt="${product.name}">
-              <div>
-                <h3>${product.name}</h3>
-                <p>₹${product.price} × ${item.quantity}</p>
-              </div>
-              <button onclick="removeFromCart('${item.id}')">×</button>
-            </div>
-          `;
+          return `<div class="cart-item"><h3>${product.name}</h3><p>₹${product.price} × ${item.quantity}</p></div>`;
         }
       }).join('');
-
       document.getElementById('cartItems').innerHTML = items;
       document.getElementById('cartTotal').textContent = total;
     }
 
-    function removeFromCart(id) {
-      cart = cart.filter(i => i.id !== id);
-      localStorage.setItem('cart', JSON.stringify(cart));
-      updateCartBadge();
-      loadCartItems();
-      loadProducts();
+    function openMap() {
+      alert('Store Locator: Visit our showroom at Delhi, Mumbai, Bangalore!');
     }
   </script>
+  <script src="script.js"></script>
 </body>
 </html>

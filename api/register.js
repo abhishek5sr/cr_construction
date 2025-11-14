@@ -29,31 +29,32 @@ export default async function handler(req, res) {
     const istOffset = 5 * 60 + 30; // 330 minutes
     const otpExpires = new Date(Date.now() + (10 * 60 + istOffset) * 1000); // 10 mins + IST offset
 
-    if (existing) {
-      await db.collection('users').updateOne(
-        { email: email.toLowerCase() },
-        {
-          $set: {
-            name,
-            password: hashedPassword,
-            verified: false,
-            otp,
-            otpExpires,
-            createdAt: new Date()
+    console.log(`Registering: email=${email}, otp=${otp}, otpExpires=${otpExpires.toISOString()} (IST)`);
+    const operation = existing
+      ? await db.collection('users').updateOne(
+          { email: email.toLowerCase() },
+          {
+            $set: {
+              name,
+              password: hashedPassword,
+              verified: false,
+              otp,
+              otpExpires,
+              createdAt: new Date()
+            }
           }
-        }
-      );
-    } else {
-      await db.collection('users').insertOne({
-        name,
-        email: email.toLowerCase(),
-        password: hashedPassword,
-        verified: false,
-        otp,
-        otpExpires,
-        createdAt: new Date()
-      });
-    }
+        )
+      : await db.collection('users').insertOne({
+          name,
+          email: email.toLowerCase(),
+          password: hashedPassword,
+          verified: false,
+          otp,
+          otpExpires,
+          createdAt: new Date()
+        });
+
+    console.log(`Operation result: modifiedCount=${existing ? operation.modifiedCount : operation.insertedId}`);
 
     await transporter.sendMail({
       from: process.env.EMAIL,
@@ -66,7 +67,7 @@ export default async function handler(req, res) {
     res.status(200).json({ message: 'Check email for OTP' });
   } catch (e) {
     await client.close();
-    console.error(e);
+    console.error('Register error:', e);
     res.status(500).json({ error: 'Server error. Try again later.' });
   }
 }

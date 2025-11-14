@@ -51,17 +51,16 @@
       <div id="productsContainer" class="products-grid"></div>
     </div>
   </div>
-
-  <!-- CART MODAL -->
-  <div id="cartModal" class="modal hidden">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2>Your Cart</h2>
-      <div id="cartItems"></div>
-      <p>Total: ₹<span id="cartTotal">0</span></p>
-      <button id="checkoutBtn">Checkout</button>
-    </div>
+<!-- Dropdown Cart Panel -->
+<div id="cartDropdown" class="dropdown-cart hidden">
+  <h3>Your Cart</h3>
+  <div id="dropdownCartItems"></div>
+  <div class="dropdown-cart-total">
+    Total: ₹<span id="dropdownCartTotal">0</span>
   </div>
+  <button onclick="proceedToCheckout()">Proceed to Checkout</button>
+  <a href="shop.html">View Full Cart</a>
+</div>
 
   <footer class="footer">
   <div class="footer-content">

@@ -1,58 +1,47 @@
-// ----------------------------------------------------------
-//  public/script.js  –  All client‑side logic (cart, auth, shop)
-// ----------------------------------------------------------
-
-// ---------- 1. CART (localStorage) ----------
+// public/script.js
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-/** Update badge on the cart icon */
 function updateCartBadge() {
   const total = cart.reduce((sum, i) => sum + i.quantity, 0);
   const badge = document.getElementById('cartCount');
   if (badge) badge.textContent = total;
 }
 
-/** Show temporary toast */
-function showNotification(msg) {
+function showNotification(msg, isError = false) {
   const el = document.createElement('div');
   el.className = 'notification';
+  el.style.background = isError ? '#ff4d4d' : '#EFB400';
   el.textContent = msg;
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 3000);
 }
 
-// ---------- 2. USER STATE (login / profile) ----------
 document.addEventListener('DOMContentLoaded', () => {
   const user = localStorage.getItem('loggedInUser');
   if (user) {
     const u = JSON.parse(user);
-    // hide login/signup
     const loginBtn = document.getElementById('loginBtn');
     const signupBtn = document.getElementById('signupBtn');
     if (loginBtn) loginBtn.classList.add('hidden');
     if (signupBtn) signupBtn.classList.add('hidden');
 
-    // show profile link
     const profileLink = document.getElementById('profileLink');
     const profileName = document.getElementById('profileName');
     if (profileLink) profileLink.classList.remove('hidden');
     if (profileName) profileName.textContent = u.name;
   }
 
-  // initialise everything else
   loadProducts();
   updateCartBadge();
-  setupCartModal();
+  setupDropdownCart();
 });
 
-/** Logout – clear localStorage & reload */
 function logout() {
   localStorage.removeItem('loggedInUser');
   localStorage.removeItem('cart');
   location.href = 'index.html';
 }
 
-// ---------- 3. LOAD PRODUCTS FROM MongoDB ----------
 async function loadProducts() {
   try {
     const res = await fetch('/api/products');
@@ -70,13 +59,11 @@ async function loadProducts() {
           <h2>${p.name}</h2>
           <p>${p.description || ''}</p>
           <p class="price">₹${p.price.toLocaleString()}</p>
-
           <div class="quantity-controls">
             <button onclick="updateQuantity('${p._id}', -1)">−</button>
             <span id="qty-${p._id}">0</span>
             <button onclick="updateQuantity('${p._id}', 1)">+</button>
           </div>
-
           <button class="add-cart-btn" onclick="addToCart('${p._id}')">
             Add to Cart
           </button>
@@ -88,18 +75,16 @@ async function loadProducts() {
       )
       .join('');
 
-    // restore quantities from cart
     cart.forEach(item => {
       const el = document.getElementById(`qty-${item.id}`);
       if (el) el.textContent = item.quantity;
     });
   } catch (err) {
     console.error(err);
-    showNotification('Could not load products');
+    showNotification('Could not load products', true);
   }
 }
 
-/** Add / increase item in cart */
 function addToCart(id) {
   const existing = cart.find(i => i.id === id);
   if (existing) existing.quantity += 1;
@@ -107,60 +92,103 @@ function addToCart(id) {
   localStorage.setItem('cart', JSON.stringify(cart));
   updateCartBadge();
   showNotification('Added to cart!');
+  loadDropdownCartItems();
 }
 
-/** Update quantity (‑ / +) */
 function updateQuantity(id, change) {
-  const item = cart.find(i => i.id === id);
-  if (!item) return;
-  item.quantity = Math.max(0, item.quantity + change);
-  if (item.quantity === 0) cart = cart.filter(i => i.id !== id);
+  let item = cart.find(i => i.id === id);
+  if (!item && change > 0) {
+    item = { id, quantity: 0 };
+    cart.push(item);
+  }
+  if (item) {
+    item.quantity = Math.max(0, item.quantity + change);
+    if (item.quantity === 0) cart = cart.filter(i => i.id !== id);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    updateCartBadge();
+    const el = document.getElementById(`qty-${id}`);
+    if (el) el.textContent = item.quantity;
+    loadDropdownCartItems();
+  }
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(i => i.id !== id);
   localStorage.setItem('cart', JSON.stringify(cart));
   updateCartBadge();
-  loadProducts(); // refresh qty display
+  loadDropdownCartItems();
+  loadProducts();
 }
 
-// ---------- 4. BUY NOW – Razorpay ----------
 async function buyNow(productId) {
-  const user = localStorage.getItem('loggedInUser');
+  const user = JSON.parse(localStorage.getItem('loggedInUser'));
   if (!user) {
-    alert('Please log in first');
-    location.href = 'login.html';
+    showNotification('Please log in first', true);
+    setTimeout(() => (location.href = 'login.html'), 1500);
     return;
   }
 
+  await checkout([{ productId, quantity: 1 }], user);
+}
+
+async function proceedToCheckout() {
+  const user = JSON.parse(localStorage.getItem('loggedInUser'));
+  if (!user) {
+    showNotification('Please log in to checkout', true);
+    setTimeout(() => (location.href = 'login.html'), 1500);
+    return;
+  }
+  if (cart.length === 0) {
+    showNotification('Cart is empty', true);
+    return;
+  }
+
+  await checkout(cart.map(item => ({ productId: item.id, quantity: item.quantity })), user);
+}
+
+async function checkout(items, user) {
   try {
     const res = await fetch('/api/create-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productId })
+      body: JSON.stringify({ items })
     });
-
     const order = await res.json();
     if (!res.ok) throw new Error(order.error || 'Order creation failed');
 
     const options = {
-      key: process.env.RAZORPAY_KEY?.includes('test')
-        ? process.env.RAZORPAY_KEY
-        : 'rzp_test_YOUR_KEY', // fallback – replace in Vercel env
+      key: 'rzp_test_YOUR_KEY', // Replace with your Razorpay test key
       amount: order.amount,
       currency: order.currency,
       name: 'C&R Building Solutions',
-      description: `Purchase of ${order.product.name}`,
+      description: `Purchase of ${order.products.length} items`,
       order_id: order.id,
       handler: async function (response) {
-        // optional: verify on backend
-        alert('Payment successful! Order placed.');
-        // clear cart for this product (optional)
-        cart = cart.filter(i => i.id !== productId);
-        localStorage.setItem('cart', JSON.stringify(cart));
-        updateCartBadge();
-        location.href = 'profile.html';
+        const verifyRes = await fetch('/api/verify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            userId: user._id,
+            items,
+            amount: order.amount
+          })
+        });
+        const verifyData = await verifyRes.json();
+        if (verifyRes.ok) {
+          showNotification('Payment successful! Order placed.');
+          cart = [];
+          localStorage.setItem('cart', JSON.stringify(cart));
+          updateCartBadge();
+          loadDropdownCartItems();
+          setTimeout(() => (location.href = 'profile.html'), 1500);
+        } else {
+          showNotification(verifyData.error || 'Payment verification failed', true);
+        }
       },
-      prefill: {
-        name: JSON.parse(user).name,
-        email: JSON.parse(user).email
-      },
+      prefill: { name: user.name, email: user.email },
       theme: { color: '#EFB400' }
     };
 
@@ -168,40 +196,32 @@ async function buyNow(productId) {
     rzp.open();
   } catch (err) {
     console.error(err);
-    alert('Payment failed – try again');
+    showNotification('Checkout failed – try again', true);
   }
 }
 
-// ---------- 5. CART MODAL ----------
-function setupCartModal() {
-  const modal = document.getElementById('cartModal');
-  const closeBtn = document.querySelector('.close');
+function setupDropdownCart() {
   const cartIcon = document.getElementById('cartIcon');
-  const checkoutBtn = document.getElementById('checkoutBtn');
+  const dropdown = document.getElementById('cartDropdown');
 
-  cartIcon.onclick = () => {
-    loadCartItems();
-    modal.classList.remove('hidden');
-  };
-  closeBtn.onclick = () => modal.classList.add('hidden');
-  window.onclick = e => {
-    if (e.target === modal) modal.classList.add('hidden');
-  };
+  if (!dropdown) return;
 
-  checkoutBtn.onclick = () => {
-    const user = localStorage.getItem('loggedInUser');
-    if (!user) {
-      alert('Login required for checkout');
-      location.href = 'login.html';
-    } else {
-      alert('Checkout feature coming soon!');
+  cartIcon.addEventListener('click', () => {
+    dropdown.classList.toggle('show');
+    loadDropdownCartItems();
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!cartIcon.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.remove('show');
     }
-  };
+  });
 }
 
-async function loadCartItems() {
-  const itemsDiv = document.getElementById('cartItems');
-  const totalSpan = document.getElementById('cartTotal');
+async function loadDropdownCartItems() {
+  const itemsDiv = document.getElementById('dropdownCartItems');
+  const totalSpan = document.getElementById('dropdownCartTotal');
+  if (!itemsDiv) return;
 
   if (cart.length === 0) {
     itemsDiv.innerHTML = '<p>Your cart is empty</p>';
@@ -219,11 +239,11 @@ async function loadCartItems() {
       if (!p) return '';
       total += p.price * item.quantity;
       return `
-        <div class="cart-item">
+        <div class="dropdown-cart-item">
           <img src="${p.image}" alt="${p.name}">
           <div>
             <h4>${p.name}</h4>
-            <p>₹${p.price} × ${item.quantity}</p>
+            <p>₹${p.price.toLocaleString()} × ${item.quantity}</p>
           </div>
           <button onclick="removeFromCart('${item.id}')">×</button>
         </div>
@@ -235,28 +255,13 @@ async function loadCartItems() {
   totalSpan.textContent = total.toLocaleString();
 }
 
-/** Remove whole item from cart */
-function removeFromCart(id) {
-  cart = cart.filter(i => i.id !== id);
-  localStorage.setItem('cart', JSON.stringify(cart));
-  updateCartBadge();
-  loadCartItems();
-  loadProducts();
-}
-
-// ---------- 6. STORE LOCATOR (simple alert – replace with map later) ----------
 function openMap() {
-  alert(
-    'Store Locator\n\nDelhi – Plot 12, Sector 5\nMumbai – Andheri East\nBangalore – Koramangala'
-  );
+  alert('Store Locator\n\nDelhi – Plot 12, Sector 5\nMumbai – Andheri East\nBangalore – Koramangala');
 }
 
-/* ----------------------------------------------------------
-   OPTIONAL: expose some functions globally for inline onclick
-   (used in product card quantity buttons)
----------------------------------------------------------- */
 window.updateQuantity = updateQuantity;
 window.addToCart = addToCart;
 window.buyNow = buyNow;
 window.removeFromCart = removeFromCart;
 window.openMap = openMap;
+window.proceedToCheckout = proceedToCheckout;

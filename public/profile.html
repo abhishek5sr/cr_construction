@@ -3,31 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>User Profile</title>
+  <title>User Profile | C&R Building Solutions</title>
   <link rel="stylesheet" href="login.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
   <style>
-    .profile-card { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); width: 400px; text-align: center; }
-    .profile-card h1 { color: #efb400; margin-bottom: 20px; }
-    .profile-card p { font-size: 1.1em; color: #555; }
-    .profile-card button { margin-top: 20px; width: 50%; background-color: #f44336; }
+    .profile-container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+    .profile-card { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); margin-bottom: 2rem; text-align: center; }
+    .profile-card h1 { color: #EFB400; margin-bottom: 20px; }
+    .profile-card p { font-size: 1.1em; color: #555; margin: 0.5rem 0; }
+    .profile-card button { margin-top: 20px; width: 50%; background-color: #f44336; color: white; padding: 0.8rem; border: none; border-radius: 50px; cursor: pointer; }
     .profile-card button:hover { background-color: #d32f2f; }
+    .orders-section h2 { color: #8B6F47; margin-bottom: 1rem; }
+    .order-card { background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); margin-bottom: 1rem; }
+    .order-card p { margin: 0.5rem 0; }
+    .order-card ul { list-style: none; padding: 0; }
+    .order-card li { margin: 0.3rem 0; }
   </style>
 </head>
 <body>
-  <div class="login-container profile-card">
-    <h1>Your Profile</h1>
-    <p><strong>Name:</strong> <span id="profileUserName"></span></p>
-    <p><strong>User ID:</strong> <span id="profileUserID"></span></p>
-    <button id="logoutBtn">Log Out</button>
+  <div class="navbar">
+    <div class="logo">
+      <img src="logo.png" alt="C&R Logo" height="70px">
+    </div>
+    <div class="nav">
+      <div class="navlinks"><a href="about.html" style="text-decoration: none; color: #EFB400;">About Us</a></div>
+      <div class="navlinks"><a href="services.html" style="text-decoration: none; color: #EFB400;">Services</a></div>
+      <div class="navlinks"><a href="blog.html" style="text-decoration: none; color: #EFB400;">Blog</a></div>
+      <div class="navlinks"><a href="customer.html" style="text-decoration: none; color: #EFB400;">Customer</a></div>
+      <div class="navlinks"><a href="sustainability.html" style="text-decoration: none; color: #EFB400;">Sustainability</a></div>
+      <div class="navlinks"><a href="contact.html" style="text-decoration: none; color: #EFB400;">Contact Us</a></div>
+      <div class="navlinks"><a href="faqs.html" style="text-decoration: none; color: #EFB400;">FAQs</a></div>
+    </div>
+    <div class="nav-auth">
+      <a href="login.html" id="loginBtn" class="auth-btn login hidden">Login</a>
+      <a href="register.html" id="signupBtn" class="auth-btn signup hidden">Sign Up</a>
+      <a href="profile.html" id="profileLink" class="navlinks profile-link">
+        <i class="fa-solid fa-user-circle"></i>
+        <span id="profileName">Profile</span>
+      </a>
+    </div>
+    <div class="nav-cart">
+      <i id="cartIcon" class="fa-solid fa-shopping-cart"></i>
+      <span id="cartCount" class="cart-badge">0</span>
+    </div>
   </div>
 
+  <div class="profile-container">
+    <div class="profile-card">
+      <h1>Your Profile</h1>
+      <p><strong>Name:</strong> <span id="profileUserName"></span></p>
+      <p><strong>Email:</strong> <span id="profileUserEmail"></span></p>
+      <p><strong>User ID:</strong> <span id="profileUserID"></span></p>
+      <button id="logoutBtn">Log Out</button>
+    </div>
+
+    <div class="orders-section">
+      <h2>Your Orders</h2>
+      <div id="ordersContainer"></div>
+    </div>
+  </div>
+
+  <div id="cartDropdown" class="dropdown-cart hidden">
+    <h3>Your Cart</h3>
+    <div id="dropdownCartItems"></div>
+    <div class="dropdown-cart-total">
+      Total: ₹<span id="dropdownCartTotal">0</span>
+    </div>
+    <button onclick="proceedToCheckout()">Proceed to Checkout</button>
+    <a href="shop.html">View Full Cart</a>
+  </div>
+
+  <script src="script.js"></script>
   <script>
     const loggedInUser = localStorage.getItem('loggedInUser');
     const userData = loggedInUser ? JSON.parse(loggedInUser) : null;
 
     if (userData) {
       document.getElementById('profileUserName').textContent = userData.name;
+      document.getElementById('profileUserEmail').textContent = userData.email;
       document.getElementById('profileUserID').textContent = userData._id;
+      loadOrders();
     } else {
       alert('You must log in to view the profile.');
       window.location.href = 'login.html';
@@ -35,8 +91,40 @@
 
     document.getElementById('logoutBtn').addEventListener('click', function() {
       localStorage.removeItem('loggedInUser');
+      localStorage.removeItem('cart');
       window.location.href = 'index.html';
     });
+
+    async function loadOrders() {
+      try {
+        const res = await fetch(`/api/orders?userId=${userData._id}`);
+        const orders = await res.json();
+        if (!res.ok) throw new Error('Failed to fetch orders');
+
+        const container = document.getElementById('ordersContainer');
+        if (orders.length === 0) {
+          container.innerHTML = '<p>No orders yet.</p>';
+          return;
+        }
+
+        container.innerHTML = orders
+          .map(order => `
+            <div class="order-card">
+              <p><strong>Order ID:</strong> ${order.orderId}</p>
+              <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</p>
+              <p><strong>Total:</strong> ₹${order.amount.toLocaleString()}</p>
+              <p><strong>Status:</strong> ${order.status}</p>
+              <ul>
+                ${order.items.map(item => `<li>${item.quantity} × ${item.name} (₹${item.price.toLocaleString()})</li>`).join('')}
+              </ul>
+            </div>
+          `)
+          .join('');
+      } catch (err) {
+        console.error(err);
+        document.getElementById('ordersContainer').innerHTML = '<p>Failed to load orders.</p>';
+      }
+    }
   </script>
 </body>
 </html>

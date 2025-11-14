@@ -36,6 +36,10 @@
       <span id="profileName">Profile</span>
     </a>
   </div>
+  <div class="nav-cart">
+  <i id="cartIcon" class="fa-solid fa-shopping-cart"></i>
+  <span id="cartCount" class="cart-badge">0</span>
+</div>
 </div>
 
   <!-- MAIN CONTENT -->
@@ -68,18 +72,16 @@
     </div>
   </div>
 
-  <!-- CART MODAL -->
-  <div id="cartModal" class="modal hidden">
-    <div class="modal-content">
-      <span class="close">×</span>
-      <h2>Your Cart</h2>
-      <div id="cartItems"></div>
-      <div class="cart-total">
-        <strong>Total: ₹<span id="cartTotal">0</span></strong>
-      </div>
-      <button id="checkoutBtn">Proceed to Checkout</button>
-    </div>
+ <!-- Dropdown Cart Panel -->
+<div id="cartDropdown" class="dropdown-cart hidden">
+  <h3>Your Cart</h3>
+  <div id="dropdownCartItems"></div>
+  <div class="dropdown-cart-total">
+    Total: ₹<span id="dropdownCartTotal">0</span>
   </div>
+  <button onclick="proceedToCheckout()">Proceed to Checkout</button>
+  <a href="shop.html">View Full Cart</a>
+</div>
 
 
   <footer class="footer">

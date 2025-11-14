@@ -1,6 +1,7 @@
 import { MongoClient } from 'mongodb';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid'; // Install with: npm install uuid
 
 const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri);
@@ -23,13 +24,10 @@ export default async function handler(req, res) {
     if (existing && existing.verified) return res.status(400).json({ error: 'User already exists' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationToken = uuidv4(); // Unique token
+    const tokenExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiration
 
-    // Adjust for IST (UTC+5:30, add 330 minutes)
-    const istOffset = 5 * 60 + 30; // 330 minutes
-    const otpExpires = new Date(Date.now() + (10 * 60 + istOffset) * 1000).toISOString();
-
-    console.log(`Registering: email=${email}, otp=${otp}, otpExpires=${otpExpires.toISOString()} (IST)`);
+    console.log(`Registering: email=${email}, token=${verificationToken}, tokenExpires=${tokenExpires.toISOString()} (IST)`);
     const operation = existing
       ? await db.collection('users').updateOne(
           { email: email.toLowerCase() },
@@ -38,8 +36,8 @@ export default async function handler(req, res) {
               name,
               password: hashedPassword,
               verified: false,
-              otp,
-              otpExpires,
+              verificationToken,
+              tokenExpires,
               createdAt: new Date()
             }
           }
@@ -49,22 +47,23 @@ export default async function handler(req, res) {
           email: email.toLowerCase(),
           password: hashedPassword,
           verified: false,
-          otp,
-          otpExpires,
+          verificationToken,
+          tokenExpires,
           createdAt: new Date()
         });
 
     console.log(`Operation result: modifiedCount=${existing ? operation.modifiedCount : operation.insertedId}`);
 
+    const verificationLink = `https://cr-building-solutions.vercel.app/verify-email?token=${verificationToken}&email=${encodeURIComponent(email.toLowerCase())}`;
     await transporter.sendMail({
       from: process.env.EMAIL,
       to: email,
       subject: 'Verify Your C&R Account',
-      html: `<p>OTP: <strong>${otp}</strong> (10 mins)</p>`
+      html: `<p>Please verify your account by clicking the link below:</p><p><a href="${verificationLink}">${verificationLink}</a></p><p>Link expires in 10 minutes.</p>`
     });
 
     await client.close();
-    res.status(200).json({ message: 'Check email for OTP' });
+    res.status(200).json({ message: 'Verification link sent to your email' });
   } catch (e) {
     await client.close();
     console.error('Register error:', e);

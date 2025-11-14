@@ -57,237 +57,102 @@
       <div class="c1" onclick="openMap()">
         <i class="fa-solid fa-map-marker-alt"></i>
         <h3>Store Locator</h3>
-        <p>Find our showrooms in Delhi, Mumbai, Bangalore.</p>
+        <p>Find your nearest C&R outlet.</p>
+      </div>
+      <div class="c1" onclick="window.location.href='contact.html'">
+        <i class="fa-solid fa-headset"></i>
+        <h3>Support</h3>
+        <p>24/7 customer assistance.</p>
       </div>
     </div>
   </div>
 
-  <!-- DROPDOWN CART -->
+  <!-- CART DROPDOWN -->
   <div id="cartDropdown" class="dropdown-cart hidden">
     <h3>Your Cart</h3>
     <div id="dropdownCartItems"></div>
-    <div class="dropdown-cart-total">Total: ₹<span id="dropdownCartTotal">0</span></div>
-    <button onclick="openCartModal()">Proceed to Checkout</button>
+    <div class="dropdown-cart-total">
+      Total: ₹<span id="dropdownCartTotal">0</span>
+    </div>
+    <button id="checkoutBtn">Proceed to Checkout</button>
     <a href="shop.html">View Full Cart</a>
   </div>
 
-  <!-- CART MODAL (ONE ONLY) -->
-  <div id="cartModal" class="modal hidden">
-    <div class="modal-content">
-      <span class="close">×</span>
-      <h2>Your Cart</h2>
-      <div id="cartItems"></div>
-      <p class="cart-total">Total: ₹<span id="cartTotal">0</span></p>
-      <button id="checkoutBtn">Proceed to Checkout</button>
-    </div>
-  </div>
-
-  <!-- FOOTER -->
-  <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-section">
-        <h3>C&R Building Solutions</h3>
-        <p>Transforming your dreams into reality with sustainable and innovative building solutions.</p>
-        <div class="social-icons">
-          <a href="#"><i class="fab fa-facebook-f"></i></a>
-          <a href="#"><i class="fab fa-twitter"></i></a>
-          <a href="#"><i class="fab fa-linkedin-in"></i></a>
-          <a href="#"><i class="fab fa-instagram"></i></a>
-        </div>
-      </div>
-      <div class="footer-section">
-        <h3>Quick Links</h3>
-        <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="about.html">About Us</a></li>
-          <li><a href="services.html">Services</a></li>
-          <li><a href="blog.html">Blog</a></li>
-          <li><a href="customer.html">Customer</a></li>
-          <li><a href="sustainability.html">Sustainability</a></li>
-          <li><a href="contact.html">Contact Us</a></li>
-          <li><a href="faqs.html">FAQs</a></li>
-        </ul>
-      </div>
-      <div class="footer-section">
-        <h3>Contact Info</h3>
-        <ul>
-          <li>Email: info@crbuildingsolutions.com</li>
-          <li>Phone: +91 123 456 7890</li>
-          <li>Address: 123 Construction Lane, Delhi, India</li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>© 2025 C&R Building Solutions. All rights reserved.</p>
-      <div class="footer-links">
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms of Service</a>
-        <a href="#">Sitemap</a>
-      </div>
-    </div>
-  </footer>
-
-  <!-- FULL SCRIPT (FIXED) -->
   <script>
-    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const cartIcon = document.getElementById('cartIcon');
-    const dropdown = document.getElementById('cartDropdown');
-    const modal = document.getElementById('cartModal');
-    const closeModal = document.querySelector('#cartModal .close');
-    const checkoutBtn = document.getElementById('checkoutBtn');
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-    // Auth Check
-    document.addEventListener('DOMContentLoaded', () => {
-      const user = localStorage.getItem('loggedInUser');
-      if (user) {
-        const u = JSON.parse(user);
-        if (u._id) {
-          document.getElementById('loginBtn').classList.add('hidden');
-          document.getElementById('signupBtn').classList.add('hidden');
-          document.getElementById('profileLink').classList.remove('hidden');
-          document.getElementById('profileName').textContent = u.name;
-        }
-      }
-      updateCartBadge();
-      loadDropdownCart();
-    });
-
-    // Cart Icon Click
-    cartIcon.onclick = () => {
-      loadDropdownCart();
-      dropdown.classList.toggle('hidden');
-    };
-
-    closeModal.onclick = () => modal.classList.add('hidden');
-    window.onclick = e => {
-      if (e.target === modal) modal.classList.add('hidden');
-      if (e.target === dropdown) dropdown.classList.add('hidden');
-    };
-
-    // Update Badge
+    // Update badge
     function updateCartBadge() {
-      const count = cart.reduce((s, i) => s + i.quantity, 0);
-      const badge = document.getElementById('cartCount');
-      badge.textContent = count;
-      if (count > 0) {
-        badge.style.transform = 'scale(1.3)';
-        setTimeout(() => badge.style.transform = '', 300);
-      }
+      const total = cart.reduce((sum, i) => sum + i.quantity, 0);
+      document.getElementById('cartCount').textContent = total;
     }
 
-    // Notification
-    function showNotification(msg) {
-      const n = document.createElement('div');
-      n.className = 'notification';
-      n.textContent = msg;
-      document.body.appendChild(n);
-      setTimeout(() => n.classList.add('show'), 10);
-      setTimeout(() => {
-        n.classList.remove('show');
-        setTimeout(() => n.remove(), 300);
-      }, 2500);
-    }
-
-    // Add to Cart
+    // Add to cart
     function addToCart(id) {
-      const idStr = String(id).trim();
-      const item = cart.find(i => i.id === idStr);
-      if (item) item.quantity += 1;
-      else cart.push({ id: idStr, quantity: 1 });
+      const existing = cart.find(i => i.id === id);
+      if (existing) {
+        existing.quantity++;
+      } else {
+        cart.push({ id, quantity: 1 });
+      }
       localStorage.setItem('cart', JSON.stringify(cart));
       updateCartBadge();
-      showNotification('Added to cart!');
-      loadDropdownCart();
+      loadDropdownCartItems();
+      alert('Added to cart!');
     }
 
-    // Remove from Cart
+    // Remove from cart
     function removeFromCart(id) {
       cart = cart.filter(i => i.id !== id);
       localStorage.setItem('cart', JSON.stringify(cart));
       updateCartBadge();
-      loadDropdownCart();
-      loadCartItems();
+      loadDropdownCartItems();
     }
 
-    // Load Dropdown Cart
-    async function loadDropdownCart() {
+    // Load dropdown items
+    async function loadDropdownCartItems() {
       const itemsDiv = document.getElementById('dropdownCartItems');
       const totalSpan = document.getElementById('dropdownCartTotal');
-
       if (cart.length === 0) {
-        itemsDiv.innerHTML = '<p style="text-align:center;color:#999;margin:1rem 0;">Empty</p>';
-        finallySpan.textContent = '0';
-        return;
-      }
-
-      const res = await fetch('/api/products');
-      const products = await res.json();
-
-      let total = 0;
-      const html = cart.map(item => {
-        const p = products.find(pr => pr.id === item.id);  // FIXED: uses `id`, not `_id`
-        if (!p) return '';
-        total += p.price * item.quantity;
-        return `
-          <div class="dropdown-cart-item">
-            <img src="${p.image || 'placeholder.jpg'}" alt="${p.name}">
-            <div>
-              <h4>${p.name}</h4>
-              <p>₹${p.price} × ${item.quantity}</p>
-            </div>
-            <button onclick="removeFromCart('${item.id}')">×</button>
-          </div>`;
-      }).join('');
-
-      itemsDiv.innerHTML = html;
-      totalSpan.textContent = total.toLocaleString();
-    }
-
-    // Load Modal Cart
-    async function loadCartItems() {
-      const itemsDiv = document.getElementById('cartItems');
-      const totalSpan = document.getElementById('cartTotal');
-
-      if (cart.length === 0) {
-        itemsDiv.innerHTML = '<p style="text-align:center;color:#999;margin:2rem 0;">Your cart is empty</p>';
+        itemsDiv.innerHTML = '<p>Your cart is empty</p>';
         totalSpan.textContent = '0';
         return;
       }
 
-      const res = await fetch('/api/products');
-      const products = await res.json();
-
-      let total = 0;
-      const html = cart.map(item => {
-        const p = products.find(pr => pr.id === item.id);  // FIXED
-        if (!p) return '';
-        total += p.price * item.quantity;
-        return `
-          <div class="cart-item">
-            <img src="${p.image || 'placeholder.jpg'}" alt="${p.name}">
-            <div>
-              <h4>${p.name}</h4>
-              <p>₹${p.price} × ${item.quantity}</p>
+      try {
+        const res = await fetch('/api/products');
+        const products = await res.json();
+        let total = 0;
+        const html = cart.map(item => {
+          const p = products.find(pr => pr.id === item.id);
+          if (!p) return '';
+          total += p.price * item.quantity;
+          return `
+            <div class="dropdown-cart-item">
+              <img src="${p.image}" alt="${p.name}">
+              <div>
+                <h4>${p.name}</h4>
+                <p>₹${p.price.toLocaleString()} × ${item.quantity}</p>
+              </div>
+              <button onclick="removeFromCart('${item.id}')">×</button>
             </div>
-            <button onclick="removeFromCart('${item.id}')">×</button>
-          </div>`;
-      }).join('');
-
-      itemsDiv.innerHTML = html;
-      totalSpan.textContent = total.toLocaleString();
-    }
-
-    // Open Modal
-    function openCartModal() {
-      loadCartItems();
-      modal.classList.remove('hidden');
-      dropdown.classList.add('hidden');
+          `;
+        }).join('');
+        itemsDiv.innerHTML = html;
+        totalSpan.textContent = total.toLocaleString();
+      } catch (err) {
+        itemsDiv.innerHTML = '<p>Error loading cart</p>';
+      }
     }
 
     // Checkout
     async function proceedToCheckout() {
       const user = localStorage.getItem('loggedInUser');
-      if (!user) return alert('Please login to checkout'), (window.location.href = 'login.html');
+      if (!user) {
+        alert('Please login to checkout');
+        window.location.href = 'login.html';
+        return;
+      }
 
       const userObj = JSON.parse(user);
       const items = cart.map(i => ({ productId: i.id, quantity: i.quantity }));
@@ -307,15 +172,15 @@
           currency: order.currency,
           name: 'C&R Building Solutions',
           order_id: order.id,
-          handler: async resp => {
+          handler: async (response) => {
             const v = await fetch('/api/verify-payment', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                razorpay_order_id: resp.razorpay_order_id,
-                razorpay_payment_id: resp.razorpay_payment_id,
-                razorpay_signature: resp.razorpay_signature,
-                userId: userObj._id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                userUserId: userObj._id,
                 items: order.products,
                 amount: order.amount
               })
@@ -326,8 +191,7 @@
               localStorage.removeItem('cart');
               cart = [];
               updateCartBadge();
-              loadDropdownCart();
-              modal.classList.add('hidden');
+              loadDropdownCartItems();
               window.location.href = 'profile.html';
             } else {
               alert('Payment failed');
@@ -342,12 +206,48 @@
       }
     }
 
-    // Expose functions
+    // Dropdown toggle
+    const cartIcon = document.getElementById('cartIcon');
+    const dropdown = document.getElementById('cartDropdown');
+    cartIcon.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle('hidden');
+      loadDropdownCartItems();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!cartIcon.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+
+    document.getElementById('checkoutBtn').onclick = proceedToCheckout;
+
+    // Open map
+    function openMap() {
+      alert('Store Locator\n\nDelhi – Plot 12, Sector 5\nMumbai – Andheri East\nBangalore – Koramangala');
+    }
+
+    // Profile & login state
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = localStorage.getItem('loggedInUser');
+      if (user) {
+        const u = JSON.parse(user);
+        document.getElementById('loginBtn')?.classList.add('hidden');
+        document.getElementById('signupBtn')?.classList.add('hidden');
+        const profileLink = document.getElementById('profileLink');
+        const profileName = document.getElementById('profileName');
+        if (profileLink) profileLink.classList.remove('hidden');
+        if (profileName) profileName.textContent = u.name;
+      }
+      updateCartBadge();
+    });
+
+    // Expose globally
     window.addToCart = addToCart;
     window.removeFromCart = removeFromCart;
-    window.openCartModal = openCartModal;
+    window.openMap = openMap;
     window.proceedToCheckout = proceedToCheckout;
-    checkoutBtn.onclick = proceedToCheckout;
   </script>
 </body>
 </html>

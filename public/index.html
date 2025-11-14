@@ -14,35 +14,29 @@
 </head>
 <body>
   <!-- NAVBAR -->
-  <div class="navbar">
-    <div class="logo">
-      <img src="Screenshot 2025-09-23 204654.png" alt="C&R Logo" height="70px">
-    </div>
-
-    <div class="nav">
-      <div class="navlinks"><p>About Us</p></div>
-      <div class="navlinks"><p>Services</p></div>
-      <div class="navlinks"><p>Blog</p></div>
-      <div class="navlinks"><p>Customer</p></div>
-      <div class="navlinks"><p>Sustainability</p></div>
-      <div class="navlinks"><p>Contact Us</p></div>
-      <div class="navlinks"><p>FAQs</p></div>
-    </div>
-
-    <div class="nav-auth">
-      <a href="login.html" id="loginBtn" class="auth-btn login">Login</a>
-      <a href="register.html" id="signupBtn" class="auth-btn signup">Sign Up</a>
-      <a href="profile.html" id="profileLink" class="navlinks profile-link hidden">
-        <i class="fa-solid fa-user-circle"></i>
-        <span id="profileName">Profile</span>
-      </a>
-    </div>
-
-    <div class="nav-cart">
-      <i id="cartIcon" class="fa-solid fa-shopping-cart"></i>
-      <span id="cartCount" class="cart-badge">0</span>
-    </div>
+ <div class="navbar">
+  <div class="logo">
+    <img src="logo.png" alt="C&R Logo" height="70px">
   </div>
+  <div class="nav">
+   
+    <div class="navlinks"><a href="about.html" style="text-decoration: none; color: #EFB400;">About Us</a></div>
+    <div class="navlinks"><a href="services.html" style="text-decoration: none; color: #EFB400;">Services</a></div>
+    <div class="navlinks"><a href="blog.html" style="text-decoration: none; color: #EFB400;">Blog</a></div>
+    <div class="navlinks"><a href="customer.html" style="text-decoration: none; color: #EFB400;">Customer</a></div>
+    <div class="navlinks"><a href="sustainability.html" style="text-decoration: none; color: #EFB400;">Sustainability</a></div>
+    <div class="navlinks"><a href="contact.html" style="text-decoration: none; color: #EFB400;">Contact Us</a></div>
+    <div class="navlinks"><a href="faqs.html" style="text-decoration: none; color: #EFB400;">FAQs</a></div>
+  </div>
+  <div class="nav-auth">
+    <a href="login.html" id="loginBtn" class="auth-btn login">Login</a>
+    <a href="register.html" id="signupBtn" class="auth-btn signup" style="text-decoration: none; color:brown;">Sign Up</a>
+    <a href="profile.html" id="profileLink" class="navlinks profile-link hidden">
+      <i class="fa-solid fa-user-circle"></i>
+      <span id="profileName">Profile</span>
+    </a>
+  </div>
+</div>
 
   <!-- MAIN CONTENT -->
   <div class="main">
@@ -59,7 +53,7 @@
     <div class="container">
       <div class="c1" onclick="window.location.href='shop.html'">
         <i class="fa-solid fa-shopping-bag"></i>
-        <h1><a href="shop.html">Shop Now</a></h1>
+        <h1><a href="shop.html" style="text-decoration: none; color: #EFB400;">Shop Now</a></h1>
       </div>
       <div class="c2" onclick="openMap()">
         <i class="fa-solid fa-location-dot"></i>
@@ -87,6 +81,50 @@
     </div>
   </div>
 
+
+  <footer class="footer">
+  <div class="footer-content">
+    <div class="footer-section">
+      <h3>C&R Building Solutions</h3>
+      <p>Transforming your dreams into reality with sustainable and innovative building solutions.</p>
+      <div class="social-icons">
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+      </div>
+    </div>
+    <div class="footer-section">
+      <h3>Quick Links</h3>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About Us</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="customer.html">Customer</a></li>
+        <li><a href="sustainability.html">Sustainability</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+        <li><a href="faqs.html">FAQs</a></li>
+      </ul>
+    </div>
+    <div class="footer-section">
+      <h3>Contact Info</h3>
+      <ul>
+        <li>Email: info@crbuildingsolutions.com</li>
+        <li>Phone: +91 123 456 7890</li>
+        <li>Address: 123 Construction Lane, Delhi, India</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 C&R Building Solutions. All rights reserved.</p>
+    <div class="footer-links">
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="#">Sitemap</a>
+    </div>
+  </div>
+</footer>
   <script>
     let cart = JSON.parse(localStorage.getItem('cart')) || [];
 

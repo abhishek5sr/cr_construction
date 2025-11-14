@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Blog | C&R Building Solutions</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    .hidden { display: none !important; }
+    .notification { position: fixed; top: 20px; right: 20px; background: #EFB400; color: white; padding: 1rem; border-radius: 8px; z-index: 1000; }
+  </style>
+</head>
+<body>
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="logo">
+      <img src="logo.png" alt="C&R Logo" height="70px">
+    </div>
+    <div class="nav">
+      <div class="navlinks"><a href="index.html" style="text-decoration: none; color: #EFB400;">Home</a></div>
+      <div class="navlinks"><a href="about.html" style="text-decoration: none; color: #EFB400;">About Us</a></div>
+      <div class="navlinks"><a href="services.html" style="text-decoration: none; color: #EFB400;">Services</a></div>
+      <div class="navlinks"><a href="blog.html" style="text-decoration: none; color: #EFB400;">Blog</a></div>
+      <div class="navlinks"><a href="customer.html" style="text-decoration: none; color: #EFB400;">Customer</a></div>
+      <div class="navlinks"><a href="sustainability.html" style="text-decoration: none; color: #EFB400;">Sustainability</a></div>
+      <div class="navlinks"><a href="contact.html" style="text-decoration: none; color: #EFB400;">Contact Us</a></div>
+      <div class="navlinks"><a href="faqs.html" style="text-decoration: none; color: #EFB400;">FAQs</a></div>
+    </div>
+    <div class="nav-auth">
+      <a href="login.html" id="loginBtn" class="auth-btn login">Login</a>
+      <a href="register.html" id="signupBtn" class="auth-btn signup" style="text-decoration: none; color:brown;">Sign Up</a>
+      <a href="profile.html" id="profileLink" class="navlinks profile-link hidden">
+        <i class="fa-solid fa-user-circle"></i>
+        <span id="profileName">Profile</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <div class="section-banner">
+      <h1>Blog</h1>
+      <p>Stay updated with the latest trends and tips in the construction industry.</p>
+    </div>
+    <div class="container">
+      <div class="content-card">
+        <h2>Top 5 Sustainable Building Materials</h2>
+        <p>Discover eco-friendly materials that can make your next project greener.</p>
+      </div>
+      <div class="content-card">
+        <h2>How to Choose the Right Contractor</h2>
+        <p>Learn key factors to consider when selecting a contractor for your project.</p>
+      </div>
+    </div>
+  </div>
+<footer class="footer">
+  <div class="footer-content">
+    <div class="footer-section">
+      <h3>C&R Building Solutions</h3>
+      <p>Transforming your dreams into reality with sustainable and innovative building solutions.</p>
+      <div class="social-icons">
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+      </div>
+    </div>
+    <div class="footer-section">
+      <h3>Quick Links</h3>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About Us</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="customer.html">Customer</a></li>
+        <li><a href="sustainability.html">Sustainability</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+        <li><a href="faqs.html">FAQs</a></li>
+      </ul>
+    </div>
+    <div class="footer-section">
+      <h3>Contact Info</h3>
+      <ul>
+        <li>Email: info@crbuildingsolutions.com</li>
+        <li>Phone: +91 123 456 7890</li>
+        <li>Address: 123 Construction Lane, Delhi, India</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 C&R Building Solutions. All rights reserved.</p>
+    <div class="footer-links">
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="#">Sitemap</a>
+    </div>
+  </div>
+</footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const loggedInUser = localStorage.getItem('loggedInUser');
+      if (loggedInUser) {
+        const user = JSON.parse(loggedInUser);
+        document.getElementById('loginBtn').classList.add('hidden');
+        document.getElementById('signupBtn').classList.add('hidden');
+        document.getElementById('profileLink').classList.remove('hidden');
+        document.getElementById('profileName').textContent = user.name;
+      }
+    });
+  </script>
+</body>
+</html>

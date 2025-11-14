@@ -1,4 +1,4 @@
-/* style.css - Modern Redesign */
+/* style.css - Updated for C&R Building Solutions */
 * {
     box-sizing: border-box;
     padding: 0;
@@ -67,13 +67,13 @@ body {
     width: 100%;
 }
 
-.nav-login {
+.nav-auth {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
-#loginBtn {
+.auth-btn.login {
     background: #EFB400;
     color: white;
     border: none;
@@ -84,12 +84,19 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 12px rgba(239, 180, 0, 0.3);
+    text-decoration: none;
 }
 
-#loginBtn:hover {
+.auth-btn.login:hover {
     background: #D4A017;
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(239, 180, 0, 0.4);
+}
+
+.auth-btn.signup {
+    color: #8B6F47;
+    font-weight: 600;
+    text-decoration: none;
 }
 
 #profileLink {
@@ -112,49 +119,24 @@ body {
     padding: 2rem;
 }
 
-/* Section Buttons */
-.section {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-    padding: 2rem 0;
-    flex-wrap: wrap;
-}
-
-.section button {
-    background: white;
-    border: 2px solid #EFB400;
-    color: #8B6F47;
-    padding: 0.8rem 1.8rem;
-    font-size: 1.1rem;
-    font-weight: 600;
-    border-radius: 50px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.section button:hover {
-    background: #EFB400;
-    color: white;
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(239, 180, 0, 0.3);
-}
-
-/* Banner */
+/* Section Banner */
 .section-banner {
     text-align: center;
     padding: 3rem 1rem;
 }
 
-.section-banner img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+.section-banner h1 {
+    color: #8B6F47;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
 }
 
-/* Feature Cards */
+.section-banner p {
+    color: #666;
+    font-size: 1.2rem;
+}
+
+/* Feature Cards (Shop Now, Store Locator) */
 .container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -188,6 +170,68 @@ body {
     font-size: 1.5rem;
     color: #8B6F47;
     margin-bottom: 0.5rem;
+}
+
+/* Content Cards (Used in About, Services, etc.) */
+.content-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transition: all 0.4s ease;
+}
+
+.content-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+.content-card h2 {
+    color: #8B6F47;
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.content-card p {
+    color: #666;
+    font-size: 1rem;
+}
+
+/* Contact Form */
+.content-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.content-card input,
+.content-card textarea {
+    padding: 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.content-card textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.content-card button {
+    background: #EFB400;
+    color: white;
+    border: none;
+    padding: 0.8rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.content-card button:hover {
+    background: #D4A017;
+    transform: scale(1.05);
 }
 
 /* Products Section */
@@ -255,6 +299,43 @@ body {
     transform: scale(1.05);
 }
 
+/* Section Buttons (For Home, Infrastructure, Corporate) */
+.section {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 2rem 0;
+    flex-wrap: wrap;
+}
+
+.section button {
+    background: white;
+    border: 2px solid #EFB400;
+    color: #8B6F47;
+    padding: 0.8rem 1.8rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.section button:hover {
+    background: #EFB400;
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(239, 180, 0, 0.3);
+}
+
+/* Banner */
+.section-banner img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
 /* Hidden Class */
 .hidden {
     display: none !important;
@@ -274,11 +355,144 @@ body {
         justify-content: center;
     }
 
-    .nav-login {
+    .nav-auth {
         margin-top: 0.5rem;
     }
 
     .section {
         padding-top: 160px;
+    }
+
+    .section-banner h1 {
+        font-size: 2rem;
+    }
+
+    .section-banner p {
+        font-size: 1rem;
+    }
+}
+/* Existing styles remain unchanged, add these at the end */
+
+/* Footer */
+.footer {
+    background: linear-gradient(135deg, #FEF3E2 0%, #FCE191 100%);
+    color: #8B6F47;
+    padding: 2rem 0;
+    margin-top: 2rem;
+    width: 100%;
+    border-top: 1px solid rgba(239, 180, 0, 0.3);
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.footer-section {
+    margin-bottom: 1.5rem;
+    flex: 1;
+    min-width: 200px;
+}
+
+.footer-section h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #EFB400;
+    font-weight: 600;
+}
+
+.footer-section p {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-section ul li a {
+    color: #8B6F47;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+.footer-section ul li a:hover {
+    color: #EFB400;
+}
+
+.social-icons {
+    margin-top: 1rem;
+}
+
+.social-icons a {
+    color: #8B6F47;
+    font-size: 1.2rem;
+    margin-right: 1rem;
+    transition: color 0.3s ease;
+}
+
+.social-icons a:hover {
+    color: #EFB400;
+}
+
+.footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    flex-wrap: wrap;
+    border-top: 1px solid rgba(139, 111, 71, 0.3);
+}
+
+.footer-bottom p {
+    font-size: 0.8rem;
+    margin: 0.5rem 0;
+}
+
+.footer-links a {
+    color: #8B6F47;
+    text-decoration: none;
+    font-size: 0.8rem;
+    margin-left: 1rem;
+    transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: #EFB400;
+}
+
+/* Responsive Footer */
+@media (max-width: 768px) {
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .footer-section {
+        margin-bottom: 2rem;
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .footer-links a {
+        margin: 0.5rem 0;
+        display: block;
     }
 }

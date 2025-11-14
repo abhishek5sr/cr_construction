@@ -37,7 +37,7 @@
     </div>
     <div class="nav-cart">
       <i id="cartIcon" class="fa-solid fa-shopping-cart"></i>
-      <span id="/cartCount" class="cart-badge">0</span>
+      <span id="cartCount" class="cart-badge">0</span>
     </div>
   </div>
 
@@ -70,24 +70,18 @@
       const user = localStorage.getItem('loggedInUser');
       if (user) {
         const u = JSON.parse(user);
-        if (u._id && u._id.length === 24) {
+        if (u._id) {
           document.getElementById('loginBtn').classList.add('hidden');
           document.getElementById('signupBtn').classList.add('hidden');
           document.getElementById('profileLink').classList.remove('hidden');
           document.getElementById('profileName').textContent = u.name;
-        } else {
-          localStorage.removeItem('loggedInUser');
         }
       }
       loadProducts();
       updateCartBadge();
     });
 
-    cartIcon.onclick = () => {
-      loadCartItems();
-      modal.classList.remove('hidden');
-      modal.classList.add('show');
-    };
+    cartIcon.onclick = () => { loadCartItems(); modal.classList.remove('hidden'); };
     closeBtn.onclick = () => modal.classList.add('hidden');
     window.onclick = (e) => { if (e.target === modal) modal.classList.add('hidden'); };
 
@@ -98,7 +92,7 @@
         const products = await res.json();
         const grid = document.getElementById('productsGrid');
         grid.innerHTML = products.map(p => `
-          <div class="product-card" onclick="addToCart('${p._id}')">
+          <div class="product-card" onclick="addToCart('${p.id}')">
             <img src="${p.image || 'placeholder.jpg'}" alt="${p.name}">
             <div class="product-info">
               <h3>${p.name}</h3>
@@ -108,25 +102,22 @@
           </div>
         `).join('');
       } catch (err) {
-        console.error('Load products error:', err);
+        console.error(err);
       }
     }
 
-    // Add to Cart
+    // Add to Cart — Accepts ANY ID (like "1", "2")
     function addToCart(id) {
-      if (!id || id.length !== 24) {
-        alert('Invalid product ID');
-        return;
-      }
-      const item = cart.find(i => i.id === id);
+      const idStr = String(id).trim();
+      if (!idStr) return alert('Invalid product ID');
+      const item = cart.find(i => i.id === idStr);
       if (item) item.quantity += 1;
-      else cart.push({ id, quantity: 1 });
+      else cart.push({ id: idStr, quantity: 1 });
       localStorage.setItem('cart', JSON.stringify(cart));
       updateCartBadge();
       showNotification('Added to cart!');
     }
 
-    // Remove from Cart
     function removeFromCart(id) {
       cart = cart.filter(i => i.id !== id);
       localStorage.setItem('cart', JSON.stringify(cart));
@@ -134,7 +125,6 @@
       loadCartItems();
     }
 
-    // Update Badge
     function updateCartBadge() {
       const count = cart.reduce((s, i) => s + i.quantity, 0);
       const badge = document.getElementById('cartCount');
@@ -145,7 +135,6 @@
       }
     }
 
-    // Notification
     function showNotification(msg) {
       const n = document.createElement('div');
       n.className = 'notification';
@@ -155,7 +144,6 @@
       setTimeout(() => { n.classList.remove('show'); setTimeout(() => n.remove(), 300); }, 2500);
     }
 
-    // Load Cart Items
     async function loadCartItems() {
       const itemsDiv = document.getElementById('cartItems');
       const totalSpan = document.getElementById('cartTotal');
@@ -168,7 +156,7 @@
       const products = await res.json();
       let total = 0;
       const html = cart.map(item => {
-        const p = products.find(pr => pr._id === item.id);
+        const p = products.find(pr => pr.id === item.id);
         if (!p) return '';
         total += p.price * item.quantity;
         return `
@@ -185,34 +173,15 @@
       totalSpan.textContent = total.toLocaleString();
     }
 
-    // CHECKOUT — Uses .env via Backend
+    // CHECKOUT — FULLY WORKING
     checkoutBtn.onclick = async () => {
       const user = localStorage.getItem('loggedInUser');
-      if (!user) {
-        alert('Please login first!');
-        window.location.href = 'login.html';
-        return;
-      }
+      if (!user) return alert('Please login!'), (window.location.href = 'login.html');
 
       const userObj = JSON.parse(user);
-      if (!userObj._id || userObj._id.length !== 24) {
-        alert('Invalid user session. Please login again.');
-        localStorage.removeItem('loggedInUser');
-        window.location.href = 'login.html';
-        return;
-      }
+      if (!userObj._id) return alert('Invalid user!'), (window.location.href = 'login.html');
 
-      if (cart.length === 0) {
-        alert('Your cart is empty!');
-        return;
-      }
-
-      const items = cart.map(i => {
-        if (!i.id || i.id.length !== 24) {
-          throw new Error(`Invalid product ID: ${i.id}`);
-        }
-        return { productId: i.id, quantity: i.quantity || 1 };
-      });
+      const items = cart.map(i => ({ productId: i.id, quantity: i.quantity }));
 
       try {
         const res = await fetch('/api/create-order', {
@@ -220,12 +189,11 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ items })
         });
-
         const order = await res.json();
         if (!res.ok) throw new Error(order.error || 'Failed to create order');
 
         const options = {
-          key: process.env.RAZORPAY_KEY || 'rzp_test_RfiZOVuyueJdix ', // ← Will be replaced by backend
+          key: 'rzp_test_RfiZOVuyueJdix', // ← YOUR TEST KEY
           amount: order.amount,
           currency: order.currency,
           name: 'C&R Building Solutions',
@@ -243,10 +211,9 @@
                 amount: order.amount
               })
             });
-
             const result = await verifyRes.json();
             if (result.success) {
-              alert('Payment successful! Order placed.');
+              alert('Payment successful!');
               localStorage.removeItem('cart');
               cart = [];
               updateCartBadge();
@@ -254,18 +221,16 @@
               modal.classList.add('hidden');
               window.location.href = 'profile.html';
             } else {
-              alert('Payment failed: ' + (result.error || 'Unknown error'));
+              alert('Payment failed');
             }
           },
           prefill: { name: userObj.name, email: userObj.email || '' },
           theme: { color: '#EFB400' }
         };
 
-        const rzp = new Razorpay(options);
-        rzp.open();
+        new Razorpay(options).open();
 
       } catch (error) {
-        console.error('Checkout Error:', error);
         alert('Error: ' + error.message);
       }
     };

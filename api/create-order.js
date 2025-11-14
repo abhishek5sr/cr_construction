@@ -1,5 +1,5 @@
 // api/create-order.js
-import { MongoClient, ObjectId } from 'mongodb';
+import { MongoClient } from 'mongodb';
 import Razorpay from 'razorpay';
 
 const uri = process.env.MONGODB_URI;
@@ -11,30 +11,27 @@ const razorpay = new Razorpay({
 });
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') return res.status(405).end();
 
   const { items } = req.body;
-
-  if (!Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ error: 'Invalid cart items' });
-  }
+  if (!items || items.length === 0) return res.status(400).json({ error: 'Cart empty' });
 
   try {
     await client.connect();
     const db = client.db('cr_building');
 
-    let totalAmount = 0;
+    let total = 0;
     const products = [];
 
     for (const item of items) {
-      const product = await db.collection('products').findOne({ _id: new ObjectId(item.productId) });
-      if (!product) return res.status(404).json({ error: `Product ${item.productId} not found` });
+      const product = await db.collection('products').findOne({ id: item.productId }); // ← Match `id`
+      if (!product) return res.status(404).json({ error: `Product not found: ${item.productId}` });
 
       const qty = item.quantity || 1;
-      totalAmount += product.price * qty;
+      total += product.price * qty;
 
       products.push({
-        productId: product._id.toString(),  // ← CRITICAL: Convert to string
+        productId: product.id,
         name: product.name,
         price: product.price,
         quantity: qty
@@ -42,7 +39,7 @@ export default async function handler(req, res) {
     }
 
     const order = await razorpay.orders.create({
-      amount: totalAmount * 100,
+      amount: total * 100,
       currency: 'INR',
       receipt: `receipt_${Date.now()}`
     });
@@ -55,8 +52,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('Create Order Error:', error);
-    res.status(500).json({ error: 'Failed to create order. Try again later.' });
+    res.status(500).json({ error: 'Order creation failed' });
   } finally {
     await client.close();
   }

@@ -1,4 +1,4 @@
-// api/verify-payment.js — FINAL CLEAN VERSION
+// api/verify-payment.js
 import { MongoClient, ObjectId } from 'mongodb';
 import crypto from 'crypto';
 
@@ -6,22 +6,17 @@ const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri);
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') return res.status(405).end();
 
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature, userId, items, amount } = req.body;
 
-  if (!userId || userId.length !== 24) {
-    return res.status(400).json({ success: false, error: 'Invalid userId' });
-  }
-
   try {
-    const body = `${razorpay_order_id}|${razorpay_payment_id}`;
-    const expectedSignature = crypto
+    const expected = crypto
       .createHmac('sha256', process.env.RAZORPAY_SECRET)
-      .update(body)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
 
-    if (expectedSignature !== razorpay_signature) {
+    if (expected !== razorpay_signature) {
       return res.status(400).json({ success: false, error: 'Invalid signature' });
     }
 
@@ -39,8 +34,7 @@ export default async function handler(req, res) {
 
     res.status(200).json({ success: true });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, error: 'Verification failed' });
+    res.status(500).json({ success: false });
   } finally {
     await client.close();
   }

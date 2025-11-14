@@ -47,7 +47,7 @@
     <div class="products-grid" id="productsGrid"></div>
   </div>
 
-  <!-- CART MODAL -->
+  <!-- CART MODAL (ONLY ONE) -->
   <div id="cartModal" class="modal hidden">
     <div class="modal-content">
       <span class="close">x</span>
@@ -58,6 +58,7 @@
     </div>
   </div>
 
+  <!-- FULL SCRIPT (FIXED & CLEAN) -->
   <script>
     let cart = JSON.parse(localStorage.getItem('cart') || '[]');
     const cartIcon = document.getElementById('cartIcon');
@@ -81,6 +82,7 @@
       updateCartBadge();
     });
 
+    // Open/Close Modal
     cartIcon.onclick = () => { loadCartItems(); modal.classList.remove('hidden'); };
     closeBtn.onclick = () => modal.classList.add('hidden');
     window.onclick = (e) => { if (e.target === modal) modal.classList.add('hidden'); };
@@ -103,10 +105,11 @@
         `).join('');
       } catch (err) {
         console.error(err);
+        document.getElementById('productsGrid').innerHTML = '<p style="text-align:center;color:#999;">Failed to load products.</p>';
       }
     }
 
-    // Add to Cart — Accepts ANY ID (like "1", "2")
+    // Add to Cart
     function addToCart(id) {
       const idStr = String(id).trim();
       if (!idStr) return alert('Invalid product ID');
@@ -118,6 +121,7 @@
       showNotification('Added to cart!');
     }
 
+    // Remove from Cart
     function removeFromCart(id) {
       cart = cart.filter(i => i.id !== id);
       localStorage.setItem('cart', JSON.stringify(cart));
@@ -125,6 +129,7 @@
       loadCartItems();
     }
 
+    // Update Badge
     function updateCartBadge() {
       const count = cart.reduce((s, i) => s + i.quantity, 0);
       const badge = document.getElementById('cartCount');
@@ -135,15 +140,20 @@
       }
     }
 
+    // Notification
     function showNotification(msg) {
       const n = document.createElement('div');
       n.className = 'notification';
       n.textContent = msg;
       document.body.appendChild(n);
       setTimeout(() => n.classList.add('show'), 10);
-      setTimeout(() => { n.classList.remove('show'); setTimeout(() => n.remove(), 300); }, 2500);
+      setTimeout(() => {
+        n.classList.remove('show');
+        setTimeout(() => n.remove(), 300);
+      }, 2500);
     }
 
+    // Load Cart Items
     async function loadCartItems() {
       const itemsDiv = document.getElementById('cartItems');
       const totalSpan = document.getElementById('cartTotal');
@@ -156,7 +166,7 @@
       const products = await res.json();
       let total = 0;
       const html = cart.map(item => {
-        const p = products.find(pr => pr.id === item.id);
+        const p = products.find(pr => pr.id === item.id);  // CORRECT: uses `id`
         if (!p) return '';
         total += p.price * item.quantity;
         return `
@@ -173,7 +183,7 @@
       totalSpan.textContent = total.toLocaleString();
     }
 
-    // CHECKOUT — FULLY WORKING
+    // Checkout
     checkoutBtn.onclick = async () => {
       const user = localStorage.getItem('loggedInUser');
       if (!user) return alert('Please login!'), (window.location.href = 'login.html');
@@ -193,7 +203,7 @@
         if (!res.ok) throw new Error(order.error || 'Failed to create order');
 
         const options = {
-          key: 'rzp_test_RfiZOVuyueJdix', // ← YOUR TEST KEY
+          key: 'rzp_test_RfiZOVuyueJdix',
           amount: order.amount,
           currency: order.currency,
           name: 'C&R Building Solutions',
@@ -235,6 +245,7 @@
       }
     };
 
+    // Expose globally
     window.addToCart = addToCart;
     window.removeFromCart = removeFromCart;
   </script>

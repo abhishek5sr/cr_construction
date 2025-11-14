@@ -25,13 +25,17 @@ export default async function handler(req, res) {
     const hashedPassword = await bcrypt.hash(password, 10);
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
+    // Adjust for IST (UTC+5:30, add 330 minutes)
+    const istOffset = 5 * 60 + 30; // 330 minutes
+    const otpExpires = new Date(Date.now() + (10 * 60 + istOffset) * 1000); // 10 mins + IST offset
+
     await db.collection('users').insertOne({
       name,
       email: email.toLowerCase(),
       password: hashedPassword,
       verified: false,
       otp,
-      otpExpires: new Date(Date.now() + 10 * 60 * 1000),
+      otpExpires,
       createdAt: new Date()
     });
 

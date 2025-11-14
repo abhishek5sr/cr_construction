@@ -81,20 +81,20 @@
     window.onclick = (e) => { if (e.target === modal) modal.classList.add('hidden'); };
 
     async function loadProducts() {
-      const res = await fetch('/api/products');
-      const products = await res.json();
-      const grid = document.getElementById('productsGrid');
-      grid.innerHTML = products.map(p => `
-        <div class="product-card" onclick="addToCart('${p._id}')">
-          <img src="${p.image || 'placeholder.jpg'}" alt="${p.name}">
-          <div class="product-info">
-            <h3>${p.name}</h3>
-            <p>₹${p.price.toLocaleString()}</p>
-            <button>Add to Cart</button>
-          </div>
-        </div>
-      `).join('');
-    }
+  const res = await fetch('/api/products');
+  const products = await res.json();
+  const grid = document.getElementById('productsGrid');
+  grid.innerHTML = products.map(p => `
+    <div class="product-card" onclick="addToCart('${p._id}')">
+      <img src="${p.image || 'placeholder.jpg'}" alt="${p.name}">
+      <div class="product-info">
+        <h3>${p.name}</h3>
+        <p>₹${p.price.toLocaleString()}</p>
+        <button>Add to Cart</button>
+      </div>
+    </div>
+  `).join('');
+}
 
     function addToCart(id) {
       const item = cart.find(i => i.id === id);

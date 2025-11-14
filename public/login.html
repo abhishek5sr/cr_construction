@@ -61,16 +61,16 @@
       message.className = `message ${type}`;
     }
     
-  document.querySelector('form').onsubmit = (e) => {
-    e.preventDefault();
-    const user = {
-      _id: '67d8f1a2b3c4d5e6f7g8h9i0',  // 24-char hex
-      name: 'John Doe',
-      email: 'john@test.com'
-    };
-    localStorage.setItem('loggedInUser', JSON.stringify(user));
-    window.location.href = 'shop.html';
-  };
+  // document.querySelector('form').onsubmit = (e) => {
+  //   e.preventDefault();
+  //   const user = {
+  //     _id: '67d8f1a2b3c4d5e6f7g8h9i0',  // 24-char hex
+  //     name: 'John Doe',
+  //     email: 'john@test.com'
+  //   };
+  //   localStorage.setItem('loggedInUser', JSON.stringify(user));
+  //   window.location.href = 'shop.html';
+  // };
   </script>
 </body>
 </html>

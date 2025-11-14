@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Verify OTP | C&R Building Solutions</title>
+  <link rel="stylesheet" href="login.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="login-container">
+    <h2>Verify OTP</h2>
+    <form id="verifyForm">
+      <div class="input-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" required readonly />
+      </div>
+      <div class="input-group">
+        <label for="otp">OTP</label>
+        <input type="text" id="otp" required autofocus />
+      </div>
+      <button type="submit">Verify</button>
+      <p id="message" class="message"></p>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('verifyForm');
+    const message = document.getElementById('message');
+
+    // Get email from query parameter and prefill
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get('email');
+    if (email) {
+      document.getElementById('email').value = decodeURIComponent(email);
+    } else {
+      showMessage('No email provided. Please register again.', 'error');
+      setTimeout(() => (window.location.href = 'register.html'), 2000);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const otp = document.getElementById('otp').value;
+
+      message.textContent = 'Processing...';
+      message.className = 'message';
+
+      try {
+        const res = await fetch('/api/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: decodeURIComponent(email), otp })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          showMessage('OTP Verified! Redirecting to login.', 'success');
+          localStorage.setItem('loggedInUser', JSON.stringify(data.user)); // Store user data
+          setTimeout(() => (window.location.href = 'login.html'), 2000);
+        } else {
+          showMessage(data.error || 'Verification failed.', 'error');
+        }
+      } catch (err) {
+        showMessage('Server error. Try again later.', 'error');
+      }
+    });
+
+    function showMessage(msg, type) {
+      message.textContent = msg;
+      message.className = `message ${type}`;
+    }
+  </script>
+</body>
+</html>

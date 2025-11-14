@@ -35,48 +35,48 @@
     </form>
   </div>
 
- <script>
-  const form = document.getElementById('registerForm');
-  const message = document.getElementById('message');
+  <script>
+    const form = document.getElementById('registerForm');
+    const message = document.getElementById('message');
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('name').value.trim();
-    const email = document.getElementById('email').value.trim().toLowerCase();
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim().toLowerCase();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
 
-    if (password !== confirmPassword) {
-      showMessage('Passwords do not match!', 'error');
-      return;
-    }
-
-    message.textContent = 'Processing...';
-    message.className = 'message';
-
-    try {
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        showMessage('Registered! Check your email to verify.', 'success');
-        setTimeout(() => (window.location.href = 'login.html'), 2000);
-      } else {
-        showMessage(data.error || 'Registration failed.', 'error');
+      if (password !== confirmPassword) {
+        showMessage('Passwords do not match!', 'error');
+        return;
       }
-    } catch (err) {
-      showMessage('Server error. Try again later.', 'error');
-    }
-  });
 
-  function showMessage(msg, type) {
-    message.textContent = msg;
-    message.className = `message ${type}`;
-  }
-</script>
+      message.textContent = 'Processing...';
+      message.className = 'message';
+
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          showMessage('Registered! Check your email for OTP.', 'success');
+          setTimeout(() => (window.location.href = `verify-otp.html?email=${encodeURIComponent(email)}`), 2000);
+        } else {
+          showMessage(data.error || 'Registration failed.', 'error');
+        }
+      } catch (err) {
+        showMessage('Server error. Try again later.', 'error');
+      }
+    });
+
+    function showMessage(msg, type) {
+      message.textContent = msg;
+      message.className = `message ${type}`;
+    }
+  </script>
 </body>
 </html>

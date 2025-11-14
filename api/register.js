@@ -27,7 +27,7 @@ export default async function handler(req, res) {
 
     // Adjust for IST (UTC+5:30, add 330 minutes)
     const istOffset = 5 * 60 + 30; // 330 minutes
-    const otpExpires = new Date(Date.now() + (10 * 60 + istOffset) * 1000); // 10 mins + IST offset
+    const otpExpires = new Date(Date.now() + (10 * 60 + istOffset) * 1000).toISOString();
 
     console.log(`Registering: email=${email}, otp=${otp}, otpExpires=${otpExpires.toISOString()} (IST)`);
     const operation = existing

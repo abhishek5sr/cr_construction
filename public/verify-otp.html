@@ -1,67 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Verify OTP | C&R Building Solutions</title>
-  <link rel="stylesheet" href="login.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify OTP | C&R</title>
+  <link rel="stylesheet" href="login.css">
 </head>
 <body>
   <div class="login-container">
-    <h2>Verify OTP</h2>
-    <form id="verifyForm">
-      <div class="input-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" required readonly />
-      </div>
+    <h2>Verify Your Email</h2>
+    <p>Enter the OTP sent to your email</p>
+    <form id="verifyOtpForm">
       <div class="input-group">
         <label for="otp">OTP</label>
-        <input type="text" id="otp" required autofocus />
+        <input type="text" id="otp" required pattern="\d{6}" title="OTP must be a 6-digit number">
       </div>
-      <button type="submit">Verify</button>
+      <button type="submit">Verify OTP</button>
       <p id="message" class="message"></p>
+      <p style="margin-top:1rem;font-size:0.9rem;">
+        Back to <a href="register.html" style="color:#EFB400;font-weight:600;">Register</a> or 
+        <a href="login.html" style="color:#EFB400;font-weight:600;">Login</a>
+      </p>
     </form>
   </div>
 
   <script>
-    const form = document.getElementById('verifyForm');
+    const form = document.getElementById('verifyOtpForm');
     const message = document.getElementById('message');
 
-    // Get email from query parameter and prefill
+    // Get email from URL query parameter
     const urlParams = new URLSearchParams(window.location.search);
     const email = urlParams.get('email');
-    if (email) {
-      document.getElementById('email').value = decodeURIComponent(email);
-    } else {
+
+    if (!email) {
       showMessage('No email provided. Please register again.', 'error');
       setTimeout(() => (window.location.href = 'register.html'), 2000);
     }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const otp = document.getElementById('otp').value;
-
-      message.textContent = 'Processing...';
-      message.className = 'message';
+      const otp = document.getElementById('otp').value.trim();
 
       try {
-        const res = await fetch('/api/verify-otp', {
+        const res = await fetch('/api/verify-register-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: decodeURIComponent(email), otp })
+          body: JSON.stringify({ email, otp })
         });
 
         const data = await res.json();
+
         if (res.ok) {
-          showMessage('OTP Verified! Redirecting to login.', 'success');
-          localStorage.setItem('loggedInUser', JSON.stringify(data.user)); // Store user data
-          setTimeout(() => (window.location.href = 'login.html'), 2000);
+          showMessage('Email verified! Redirecting to login...', 'success');
+          setTimeout(() => (window.location.href = 'login.html'), 1500);
         } else {
-          showMessage(data.error || 'Verification failed.', 'error');
+          showMessage(data.error || 'Invalid OTP', 'error');
         }
       } catch (err) {
-        showMessage('Server error. Try again later.', 'error');
+        showMessage('Network error. Try again.', 'error');
       }
     });
 

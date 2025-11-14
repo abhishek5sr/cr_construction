@@ -13,7 +13,7 @@ const razorpay = new Razorpay({
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { items } = req.body; // items: [{ productId, quantity }]
+  const { items } = req.body;
 
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'Invalid cart items' });
@@ -25,29 +25,39 @@ export default async function handler(req, res) {
 
     let totalAmount = 0;
     const products = [];
+
     for (const item of items) {
       const product = await db.collection('products').findOne({ _id: new ObjectId(item.productId) });
       if (!product) return res.status(404).json({ error: `Product ${item.productId} not found` });
-      totalAmount += product.price * (item.quantity || 1);
-      products.push({ _id: product._id, name: product.name, price: product.price, quantity: item.quantity || 1 });
+
+      const qty = item.quantity || 1;
+      totalAmount += product.price * qty;
+
+      products.push({
+        productId: product._id.toString(),  // ← CRITICAL: Convert to string
+        name: product.name,
+        price: product.price,
+        quantity: qty
+      });
     }
 
     const order = await razorpay.orders.create({
-      amount: totalAmount * 100, // in paise
+      amount: totalAmount * 100,
       currency: 'INR',
       receipt: `receipt_${Date.now()}`
     });
 
-    await client.close();
     res.status(200).json({
       id: order.id,
       amount: order.amount,
       currency: order.currency,
       products
     });
+
   } catch (error) {
-    await client.close();
-    console.error(error);
+    console.error('Create Order Error:', error);
     res.status(500).json({ error: 'Failed to create order. Try again later.' });
+  } finally {
+    await client.close();
   }
 }

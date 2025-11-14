@@ -7,9 +7,12 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  
+  <!-- RAZORPAY CHECKOUT -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
-  <!-- NAVBAR (unchanged) -->
+  <!-- NAVBAR -->
   <div class="navbar">
     <div class="logo">
       <img src="logo.png" alt="C&R Logo" height="70px">
@@ -34,20 +37,20 @@
     </div>
     <div class="nav-cart">
       <i id="cartIcon" class="fa-solid fa-shopping-cart"></i>
-      <span id="cartCount" class="cart-badge">0</span>
+      <span id="/cartCount" class="cart-badge">0</span>
     </div>
   </div>
 
-  <!-- MAIN CONTENT (unchanged product grid) -->
+  <!-- MAIN -->
   <div class="main">
-    <h1 style="text-align: center; color: #8B6F47; margin-bottom: 2rem;">Shop Building Materials</h1>
+    <h1 style="text-align: center; color: #8B6F47; margin: 2rem 0;">Shop Building Materials</h1>
     <div class="products-grid" id="productsGrid"></div>
   </div>
 
-  <!-- CART MODAL (enhanced) -->
+  <!-- CART MODAL -->
   <div id="cartModal" class="modal hidden">
     <div class="modal-content">
-      <span class="close">×</span>
+      <span class="close">x</span>
       <h2>Your Cart</h2>
       <div id="cartItems"></div>
       <p class="cart-total">Total: ₹<span id="cartTotal">0</span></p>
@@ -55,50 +58,6 @@
     </div>
   </div>
 
-  <footer class="footer">
-  <div class="footer-content">
-    <div class="footer-section">
-      <h3>C&R Building Solutions</h3>
-      <p>Transforming your dreams into reality with sustainable and innovative building solutions.</p>
-      <div class="social-icons">
-        <a href="#"><i class="fab fa-facebook-f"></i></a>
-        <a href="#"><i class="fab fa-twitter"></i></a>
-        <a href="#"><i class="fab fa-linkedin-in"></i></a>
-        <a href="#"><i class="fab fa-instagram"></i></a>
-      </div>
-    </div>
-    <div class="footer-section">
-      <h3>Quick Links</h3>
-      <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="about.html">About Us</a></li>
-        <li><a href="services.html">Services</a></li>
-        <li><a href="blog.html">Blog</a></li>
-        <li><a href="customer.html">Customer</a></li>
-        <li><a href="sustainability.html">Sustainability</a></li>
-        <li><a href="contact.html">Contact Us</a></li>
-        <li><a href="faqs.html">FAQs</a></li>
-      </ul>
-    </div>
-    <div class="footer-section">
-      <h3>Contact Info</h3>
-      <ul>
-        <li>Email: info@crbuildingsolutions.com</li>
-        <li>Phone: +91 123 456 7890</li>
-        <li>Address: 123 Construction Lane, Delhi, India</li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <p>© 2025 C&R Building Solutions. All rights reserved.</p>
-    <div class="footer-links">
-      <a href="#">Privacy Policy</a>
-      <a href="#">Terms of Service</a>
-      <a href="#">Sitemap</a>
-    </div>
-  </div>
-</footer>
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script>
     let cart = JSON.parse(localStorage.getItem('cart') || '[]');
     const cartIcon = document.getElementById('cartIcon');
@@ -106,40 +65,59 @@
     const closeBtn = document.querySelector('.close');
     const checkoutBtn = document.getElementById('checkoutBtn');
 
+    // Auth Check
     document.addEventListener('DOMContentLoaded', () => {
       const user = localStorage.getItem('loggedInUser');
       if (user) {
         const u = JSON.parse(user);
-        document.getElementById('loginBtn').classList.add('hidden');
-        document.getElementById('signupBtn').classList.add('hidden');
-        document.getElementById('profileLink').classList.remove('hidden');
-        document.getElementById('profileName').textContent = u.name;
+        if (u._id && u._id.length === 24) {
+          document.getElementById('loginBtn').classList.add('hidden');
+          document.getElementById('signupBtn').classList.add('hidden');
+          document.getElementById('profileLink').classList.remove('hidden');
+          document.getElementById('profileName').textContent = u.name;
+        } else {
+          localStorage.removeItem('loggedInUser');
+        }
       }
       loadProducts();
       updateCartBadge();
     });
 
-    cartIcon.onclick = () => { loadCartItems(); modal.classList.remove('hidden'); modal.classList.add('show'); };
+    cartIcon.onclick = () => {
+      loadCartItems();
+      modal.classList.remove('hidden');
+      modal.classList.add('show');
+    };
     closeBtn.onclick = () => modal.classList.add('hidden');
     window.onclick = (e) => { if (e.target === modal) modal.classList.add('hidden'); };
 
+    // Load Products
     async function loadProducts() {
-  const res = await fetch('/api/products');
-  const products = await res.json();
-  const grid = document.getElementById('productsGrid');
-  grid.innerHTML = products.map(p => `
-    <div class="product-card" onclick="addToCart('${p._id}')">
-      <img src="${p.image || 'placeholder.jpg'}" alt="${p.name}">
-      <div class="product-info">
-        <h3>${p.name}</h3>
-        <p>₹${p.price.toLocaleString()}</p>
-        <button>Add to Cart</button>
-      </div>
-    </div>
-  `).join('');
-}
+      try {
+        const res = await fetch('/api/products');
+        const products = await res.json();
+        const grid = document.getElementById('productsGrid');
+        grid.innerHTML = products.map(p => `
+          <div class="product-card" onclick="addToCart('${p._id}')">
+            <img src="${p.image || 'placeholder.jpg'}" alt="${p.name}">
+            <div class="product-info">
+              <h3>${p.name}</h3>
+              <p>₹${p.price.toLocaleString()}</p>
+              <button>Add to Cart</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Load products error:', err);
+      }
+    }
 
+    // Add to Cart
     function addToCart(id) {
+      if (!id || id.length !== 24) {
+        alert('Invalid product ID');
+        return;
+      }
       const item = cart.find(i => i.id === id);
       if (item) item.quantity += 1;
       else cart.push({ id, quantity: 1 });
@@ -148,6 +126,7 @@
       showNotification('Added to cart!');
     }
 
+    // Remove from Cart
     function removeFromCart(id) {
       cart = cart.filter(i => i.id !== id);
       localStorage.setItem('cart', JSON.stringify(cart));
@@ -155,6 +134,7 @@
       loadCartItems();
     }
 
+    // Update Badge
     function updateCartBadge() {
       const count = cart.reduce((s, i) => s + i.quantity, 0);
       const badge = document.getElementById('cartCount');
@@ -165,6 +145,7 @@
       }
     }
 
+    // Notification
     function showNotification(msg) {
       const n = document.createElement('div');
       n.className = 'notification';
@@ -174,11 +155,12 @@
       setTimeout(() => { n.classList.remove('show'); setTimeout(() => n.remove(), 300); }, 2500);
     }
 
+    // Load Cart Items
     async function loadCartItems() {
       const itemsDiv = document.getElementById('cartItems');
       const totalSpan = document.getElementById('cartTotal');
       if (cart.length === 0) {
-        itemsDiv.innerHTML = '<p style="text-align:center;color:#999;margin:2rem 0;">Your cart is empty</p>';
+        itemsDiv.innerHTML = '<p style="text-align:center;color:#999;">Your cart is empty</p>';
         totalSpan.textContent = '0';
         return;
       }
@@ -196,27 +178,96 @@
               <h4>${p.name}</h4>
               <p>₹${p.price} × ${item.quantity}</p>
             </div>
-            <button onclick="removeFromCart('${item.id}')">×</button>
+            <button onclick="removeFromCart('${item.id}')">x</button>
           </div>`;
       }).join('');
       itemsDiv.innerHTML = html;
       totalSpan.textContent = total.toLocaleString();
     }
 
+    // CHECKOUT — Uses .env via Backend
     checkoutBtn.onclick = async () => {
       const user = localStorage.getItem('loggedInUser');
-      if (!user) return alert('Login required!'), (window.location.href = 'login.html');
-      const items = cart.map(i => ({ productId: i.id, quantity: i.quantity }));
+      if (!user) {
+        alert('Please login first!');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const userObj = JSON.parse(user);
+      if (!userObj._id || userObj._id.length !== 24) {
+        alert('Invalid user session. Please login again.');
+        localStorage.removeItem('loggedInUser');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      if (cart.length === 0) {
+        alert('Your cart is empty!');
+        return;
+      }
+
+      const items = cart.map(i => {
+        if (!i.id || i.id.length !== 24) {
+          throw new Error(`Invalid product ID: ${i.id}`);
+        }
+        return { productId: i.id, quantity: i.quantity || 1 };
+      });
+
       try {
-        const res = await fetch('/api/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items }) });
+        const res = await fetch('/api/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items })
+        });
+
         const order = await res.json();
-        if (!res.ok) throw new Error(order.error);
-        const options = { key: 'YOUR_RAZORPAY_KEY_ID', amount: order.amount, currency: order.currency, name: 'C&R', order_id: order.id, handler: async (resp) => {
-          const v = await fetch('/api/verify-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...resp, userId: JSON.parse(user)._id, items: order.products, amount: order.amount }) });
-          if ((await v.json()).success) { alert('Paid!'); localStorage.removeItem('cart'); cart = []; updateCartBadge(); window.location.href = 'profile.html'; }
-        }, prefill: { name: JSON.parse(user).name }};
-        new Razorpay(options).open();
-      } catch (e) { alert('Error: ' + e.message); }
+        if (!res.ok) throw new Error(order.error || 'Failed to create order');
+
+        const options = {
+          key: process.env.RAZORPAY_KEY || 'rzp_test_RfiZOVuyueJdix ', // ← Will be replaced by backend
+          amount: order.amount,
+          currency: order.currency,
+          name: 'C&R Building Solutions',
+          order_id: order.id,
+          handler: async function (response) {
+            const verifyRes = await fetch('/api/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                userId: userObj._id,
+                items: order.products,
+                amount: order.amount
+              })
+            });
+
+            const result = await verifyRes.json();
+            if (result.success) {
+              alert('Payment successful! Order placed.');
+              localStorage.removeItem('cart');
+              cart = [];
+              updateCartBadge();
+              loadCartItems();
+              modal.classList.add('hidden');
+              window.location.href = 'profile.html';
+            } else {
+              alert('Payment failed: ' + (result.error || 'Unknown error'));
+            }
+          },
+          prefill: { name: userObj.name, email: userObj.email || '' },
+          theme: { color: '#EFB400' }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+
+      } catch (error) {
+        console.error('Checkout Error:', error);
+        alert('Error: ' + error.message);
+      }
     };
 
     window.addToCart = addToCart;

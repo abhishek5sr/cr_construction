@@ -879,6 +879,7 @@ body {
     width: 95%;
     padding: 1.5rem;
   }
+<<<<<<< HEAD
 }
 /* ——— PRODUCT CARDS (SHOP PAGE) ——— */
 .product-card {
@@ -1066,4 +1067,6 @@ body {
   color: #8B6F47;
   font-size: 0.9rem;
   text-decoration: none;
+=======
+>>>>>>> parent of dd9af4d (products rendering)
 }

@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     const db = client.db('cr_building');
 
     const existing = await db.collection('users').findOne({ email: email.toLowerCase() });
-    if (existing) return res.status(400).json({ error: 'User already exists' });
+    if (existing && existing.verified) return res.status(400).json({ error: 'User already exists' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -29,15 +29,31 @@ export default async function handler(req, res) {
     const istOffset = 5 * 60 + 30; // 330 minutes
     const otpExpires = new Date(Date.now() + (10 * 60 + istOffset) * 1000); // 10 mins + IST offset
 
-    await db.collection('users').insertOne({
-      name,
-      email: email.toLowerCase(),
-      password: hashedPassword,
-      verified: false,
-      otp,
-      otpExpires,
-      createdAt: new Date()
-    });
+    if (existing) {
+      await db.collection('users').updateOne(
+        { email: email.toLowerCase() },
+        {
+          $set: {
+            name,
+            password: hashedPassword,
+            verified: false,
+            otp,
+            otpExpires,
+            createdAt: new Date()
+          }
+        }
+      );
+    } else {
+      await db.collection('users').insertOne({
+        name,
+        email: email.toLowerCase(),
+        password: hashedPassword,
+        verified: false,
+        otp,
+        otpExpires,
+        createdAt: new Date()
+      });
+    }
 
     await transporter.sendMail({
       from: process.env.EMAIL,

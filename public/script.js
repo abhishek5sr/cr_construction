@@ -157,7 +157,7 @@ async function checkout(items, user) {
     if (!res.ok) throw new Error(order.error || 'Order creation failed');
 
     const options = {
-      key: 'rzp_test_YOUR_KEY', // Replace with your Razorpay test key
+      key: 'rzp_test_RfiZOVuyueJdix', // Replace with your Razorpay test key
       amount: order.amount,
       currency: order.currency,
       name: 'C&R Building Solutions',

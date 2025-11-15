@@ -1,6 +1,12 @@
 // public/script.js
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
+function saveCart() {
+  localStorage.setItem('cart', JSON.stringify(cart));
+  updateCartBadge();
+  loadDropdownCartItems();
+}
+
 function updateCartBadge() {
   const total = cart.reduce((sum, i) => sum + i.quantity, 0);
   const badge = document.getElementById('cartCount');
@@ -16,30 +22,37 @@ function showNotification(msg, isError = false) {
   setTimeout(() => el.remove(), 3000);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const user = localStorage.getItem('loggedInUser');
-  if (user) {
-    const u = JSON.parse(user);
-    const loginBtn = document.getElementById('loginBtn');
-    const signupBtn = document.getElementById('signupBtn');
-    if (loginBtn) loginBtn.classList.add('hidden');
-    if (signupBtn) signupBtn.classList.add('hidden');
+function updateQuantity(id, delta) {
+  const el = document.getElementById(`qty-${id}`);
+  if (!el) return;
+  let qty = parseInt(el.textContent) || 0;
+  qty = Math.max(0, qty + delta);
+  el.textContent = qty;
 
-    const profileLink = document.getElementById('profileLink');
-    const profileName = document.getElementById('profileName');
-    if (profileLink) profileLink.classList.remove('hidden');
-    if (profileName) profileName.textContent = u.name;
+  const existing = cart.find(i => i.id === id);
+  if (existing) {
+    if (qty === 0) cart = cart.filter(i => i.id !== id);
+    else existing.quantity = qty;
+  } else if (qty > 0) {
+    cart.push({ id, quantity: qty });
   }
+  saveCart();
+}
 
-  loadProducts();
-  updateCartBadge();
-  setupDropdownCart();
-});
+function addToCart(id) {
+  updateQuantity(id, 1);
+}
 
-function logout() {
-  localStorage.removeItem('loggedInUser');
-  localStorage.removeItem('cart');
-  location.href = 'index.html';
+function buyNow(id) {
+  cart = cart.filter(i => i.id !== id);
+  cart.push({ id, quantity: 1 });
+  saveCart();
+  proceedToCheckout();
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(i => i.id !== id);
+  saveCart();
 }
 
 async function loadProducts() {
@@ -48,31 +61,29 @@ async function loadProducts() {
     if (!res.ok) throw new Error('Failed to fetch products');
     const products = await res.json();
 
-    const container = document.getElementById('productContainer');
+    const container = document.getElementById('productContainer') || document.getElementById('productsGrid');
     if (!container) return;
 
     container.innerHTML = products
-      .map(
-        p => `
+      .map(p => `
         <div class="product-card">
           <img src="${p.image}" alt="${p.name}" loading="lazy">
           <h2>${p.name}</h2>
           <p>${p.description || ''}</p>
           <p class="price">₹${p.price.toLocaleString()}</p>
           <div class="quantity-controls">
-            <button onclick="updateQuantity('${p._id}', -1)">−</button>
-            <span id="qty-${p._id}">0</span>
-            <button onclick="updateQuantity('${p._id}', 1)">+</button>
+            <button onclick="updateQuantity('${p.id}', -1)">−</button>
+            <span id="qty-${p.id}">0</span>
+            <button onclick="updateQuantity('${p.id}', 1)">+</button>
           </div>
-          <button class="add-cart-btn" onclick="addToCart('${p._id}')">
+          <button class="add-cart-btn" onclick="addToCart('${p.id}')">
             Add to Cart
           </button>
-          <button class="buy-now-btn" onclick="buyNow('${p._id}')">
+          <button class="buy-now-btn" onclick="buyNow('${p.id}')">
             Buy Now
           </button>
         </div>
-      `
-      )
+      `)
       .join('');
 
     cart.forEach(item => {
@@ -81,132 +92,59 @@ async function loadProducts() {
     });
   } catch (err) {
     console.error(err);
-    showNotification('Could not load products', true);
+    showNotification('Failed to load products', true);
   }
 }
 
-function addToCart(id) {
-  const existing = cart.find(i => i.id === id);
-  if (existing) existing.quantity += 1;
-  else cart.push({ id, quantity: 1 });
-  localStorage.setItem('cart', JSON.stringify(cart));
-  updateCartBadge();
-  showNotification('Added to cart!');
-  loadDropdownCartItems();
-}
+async function loadDropdownCartItems() {
+  const itemsDiv = document.getElementById('dropdownCartItems');
+  const totalSpan = document.getElementById('dropdownCartTotal');
+  if (!itemsDiv || !totalSpan) return;
 
-function updateQuantity(id, change) {
-  let item = cart.find(i => i.id === id);
-  if (!item && change > 0) {
-    item = { id, quantity: 0 };
-    cart.push(item);
-  }
-  if (item) {
-    item.quantity = Math.max(0, item.quantity + change);
-    if (item.quantity === 0) cart = cart.filter(i => i.id !== id);
-    localStorage.setItem('cart', JSON.stringify(cart));
-    updateCartBadge();
-    const el = document.getElementById(`qty-${id}`);
-    if (el) el.textContent = item.quantity;
-    loadDropdownCartItems();
-  }
-}
-
-function removeFromCart(id) {
-  cart = cart.filter(i => i.id !== id);
-  localStorage.setItem('cart', JSON.stringify(cart));
-  updateCartBadge();
-  loadDropdownCartItems();
-  loadProducts();
-}
-
-async function buyNow(productId) {
-  const user = JSON.parse(localStorage.getItem('loggedInUser'));
-  if (!user) {
-    showNotification('Please log in first', true);
-    setTimeout(() => (location.href = 'login.html'), 1500);
-    return;
-  }
-
-  await checkout([{ productId, quantity: 1 }], user);
-}
-
-async function proceedToCheckout() {
-  const user = JSON.parse(localStorage.getItem('loggedInUser'));
-  if (!user) {
-    showNotification('Please log in to checkout', true);
-    setTimeout(() => (location.href = 'login.html'), 1500);
-    return;
-  }
   if (cart.length === 0) {
-    showNotification('Cart is empty', true);
+    itemsDiv.innerHTML = '<p>Your cart is empty</p>';
+    totalSpan.textContent = '0';
     return;
   }
 
-  await checkout(cart.map(item => ({ productId: item.id, quantity: item.quantity })), user);
-}
-
-async function checkout(items, user) {
   try {
-    const res = await fetch('/api/create-order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items })
-    });
-    const order = await res.json();
-    if (!res.ok) throw new Error(order.error || 'Order creation failed');
+    const res = await fetch('/api/products');
+    const products = await res.json();
 
-    const options = {
-      key: 'rzp_test_RfiZOVuyueJdix', // Replace with your Razorpay test key
-      amount: order.amount,
-      currency: order.currency,
-      name: 'C&R Building Solutions',
-      description: `Purchase of ${order.products.length} items`,
-      order_id: order.id,
-      handler: async function (response) {
-        const verifyRes = await fetch('/api/verify-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature,
-            userId: user._id,
-            items,
-            amount: order.amount
-          })
-        });
-        const verifyData = await verifyRes.json();
-        if (verifyRes.ok) {
-          showNotification('Payment successful! Order placed.');
-          cart = [];
-          localStorage.setItem('cart', JSON.stringify(cart));
-          updateCartBadge();
-          loadDropdownCartItems();
-          setTimeout(() => (location.href = 'profile.html'), 1500);
-        } else {
-          showNotification(verifyData.error || 'Payment verification failed', true);
-        }
-      },
-      prefill: { name: user.name, email: user.email },
-      theme: { color: '#EFB400' }
-    };
+    let total = 0;
+    const html = cart
+      .map(item => {
+        const p = products.find(pr => pr.id === item.id);
+        if (!p) return '';
+        total += p.price * item.quantity;
+        return `
+          <div class="dropdown-cart-item">
+            <img src="${p.image}" alt="${p.name}">
+            <div>
+              <h4>${p.name}</h4>
+              <p>₹${p.price.toLocaleString()} × ${item.quantity}</p>
+            </div>
+            <button onclick="removeFromCart('${item.id}')">×</button>
+          </div>
+        `;
+      })
+      .filter(Boolean)
+      .join('');
 
-    const rzp = new Razorpay(options);
-    rzp.open();
+    itemsDiv.innerHTML = html || '<p>Your cart is empty</p>';
+    totalSpan.textContent = total.toLocaleString();
   } catch (err) {
-    console.error(err);
-    showNotification('Checkout failed – try again', true);
+    itemsDiv.innerHTML = '<p>Failed to load cart</p>';
   }
 }
 
 function setupDropdownCart() {
   const cartIcon = document.getElementById('cartIcon');
   const dropdown = document.getElementById('cartDropdown');
+  if (!cartIcon || !dropdown) return;
 
-  if (!dropdown) return;
-
-  cartIcon.addEventListener('click', () => {
+  cartIcon.addEventListener('click', (e) => {
+    e.stopPropagation();
     dropdown.classList.toggle('show');
     loadDropdownCartItems();
   });
@@ -218,50 +156,89 @@ function setupDropdownCart() {
   });
 }
 
-async function loadDropdownCartItems() {
-  const itemsDiv = document.getElementById('dropdownCartItems');
-  const totalSpan = document.getElementById('dropdownCartTotal');
-  if (!itemsDiv) return;
-
-  if (cart.length === 0) {
-    itemsDiv.innerHTML = '<p>Your cart is empty</p>';
-    totalSpan.textContent = '0';
+async function proceedToCheckout() {
+  const user = localStorage.getItem('loggedInUser');
+  if (!user) {
+    alert('Please login to checkout');
+    window.location.href = 'login.html';
     return;
   }
 
-  const res = await fetch('/api/products');
-  const products = await res.json();
+  const userObj = JSON.parse(user);
+  const items = cart.map(i => ({ productId: i.id, quantity: i.quantity }));
 
-  let total = 0;
-  const html = cart
-    .map(item => {
-      const p = products.find(pr => pr._id === item.id);
-      if (!p) return '';
-      total += p.price * item.quantity;
-      return `
-        <div class="dropdown-cart-item">
-          <img src="${p.image}" alt="${p.name}">
-          <div>
-            <h4>${p.name}</h4>
-            <p>₹${p.price.toLocaleString()} × ${item.quantity}</p>
-          </div>
-          <button onclick="removeFromCart('${item.id}')">×</button>
-        </div>
-      `;
-    })
-    .join('');
+  try {
+    const res = await fetch('/api/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items, userId: userObj._id })
+    });
+    const order = await res.json();
+    if (!res.ok) throw new Error(order.error || 'Order failed');
 
-  itemsDiv.innerHTML = html;
-  totalSpan.textContent = total.toLocaleString();
+    const options = {
+      key: 'rzp_test_RfiZOVuyueJdix', // Use test key
+      amount: order.amount,
+      currency: order.currency,
+      name: 'C&R Building Solutions',
+      order_id: order.id,
+      handler: async (response) => {
+        const v = await fetch('/api/verify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            userId: order.userId,
+            items: order.products,
+            amount: order.amount
+          })
+        });
+        const result = await v.json();
+        if (result.success) {
+          showNotification('Payment successful! Order placed.');
+          cart = [];
+          localStorage.removeItem('cart');
+          updateCartBadge();
+          setTimeout(() => (location.href = 'profile.html'), 1500);
+        } else {
+          showNotification('Payment failed', true);
+        }
+      },
+      prefill: { name: userObj.name, email: userObj.email || '' },
+      theme: { color: '#EFB400' }
+    };
+    new Razorpay(options).open();
+  } catch (e) {
+    showNotification('Checkout error: ' + e.message, true);
+  }
 }
 
 function openMap() {
   alert('Store Locator\n\nDelhi – Plot 12, Sector 5\nMumbai – Andheri East\nBangalore – Koramangala');
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+  const user = localStorage.getItem('loggedInUser');
+  if (user) {
+    const u = JSON.parse(user);
+    document.querySelectorAll('#loginBtn, #signupBtn').forEach(el => el?.classList.add('hidden'));
+    const profileLink = document.getElementById('profileLink');
+    const profileName = document.getElementById('profileName');
+    if (profileLink) profileLink.classList.remove('hidden');
+    if (profileName) profileName.textContent = u.name;
+  }
+
+  loadProducts();
+  updateCartBadge();
+  setupDropdownCart();
+});
+
+// Global functions
 window.updateQuantity = updateQuantity;
 window.addToCart = addToCart;
 window.buyNow = buyNow;
 window.removeFromCart = removeFromCart;
-window.openMap = openMap;
 window.proceedToCheckout = proceedToCheckout;
+window.openMap = openMap;

@@ -8,6 +8,12 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    .hidden { display: none !important; }
+    .notification { position: fixed; top: 20px; right: 20px; background: #EFB400; color: white; padding: 1rem; border-radius: 8px; z-index: 1000; }
+    .dropdown-cart { display: none; }
+    .dropdown-cart.show { display: block; }
+  </style>
 </head>
 <body>
   <!-- NAVBAR -->
@@ -46,7 +52,7 @@
   </div>
 
   <!-- CART DROPDOWN -->
-  <div id="cartDropdown" class="dropdown-cart hidden">
+  <div id="cartDropdown" class="dropdown-cart">
     <h3>Your Cart</h3>
     <div id="dropdownCartItems"></div>
     <div class="dropdown-cart-total">
@@ -56,230 +62,6 @@
     <a href="shop.html">View Full Cart</a>
   </div>
 
-  <script>
-    let cart = JSON.parse(localStorage.getItem('cart')) || [];
-
-<<<<<<< HEAD
-    function updateCartBadge() {
-      const total = cart.reduce((sum, i) => sum + i.quantity, 0);
-      document.getElementById('cartCount').textContent = total;
-=======
-    document.addEventListener('DOMContentLoaded', () => {
-      const user = localStorage.getItem('loggedInUser');
-      if (user) {
-        const u = JSON.parse(user);
-        document.getElementById('loginBtn').classList.add('hidden');
-        document.getElementById('signupBtn').classList.add('hidden');
-        document.getElementById('profileLink').classList.remove('hidden');
-        document.getElementById('profileName').textContent = u.name;
-      }
-      loadProducts();
-      updateCartBadge();
-    });
-
-    cartIcon.onclick = () => { loadCartItems(); modal.classList.remove('hidden'); modal.classList.add('show'); };
-    closeBtn.onclick = () => modal.classList.add('hidden');
-    window.onclick = (e) => { if (e.target === modal) modal.classList.add('hidden'); };
-
-    async function loadProducts() {
-      const res = await fetch('/api/products');
-      const products = await res.json();
-      const grid = document.getElementById('productsGrid');
-      grid.innerHTML = products.map(p => `
-        <div class="product-card" onclick="addToCart('${p._id}')">
-          <img src="${p.image || 'placeholder.jpg'}" alt="${p.name}">
-          <div class="product-info">
-            <h3>${p.name}</h3>
-            <p>₹${p.price.toLocaleString()}</p>
-            <button>Add to Cart</button>
-          </div>
-        </div>
-      `).join('');
->>>>>>> parent of dd9af4d (products rendering)
-    }
-
-    function addToCart(id) {
-      const existing = cart.find(i => i.id === id);
-      if (existing) {
-        existing.quantity++;
-      } else {
-        cart.push({ id, quantity: 1 });
-      }
-      localStorage.setItem('cart', JSON.stringify(cart));
-      updateCartBadge();
-      loadDropdownCartItems();
-    }
-
-    function removeFromCart(id) {
-      cart = cart.filter(i => i.id !== id);
-      localStorage.setItem('cart', JSON.stringify(cart));
-      updateCartBadge();
-      loadDropdownCartItems();
-    }
-
-    function updateQuantity(id, delta) {
-      const existing = cart.find(i => i.id === id);
-      let qty = existing ? existing.quantity : 0;
-      qty = Math.max(0, qty + delta);
-      if (qty === 0) {
-        removeFromCart(id);
-      } else if (existing) {
-        existing.quantity = qty;
-      } else {
-        addToCart(id);
-      }
-      localStorage.setItem('cart', JSON.stringify(cart));
-      const el = document.getElementById(`qty-${id}`);
-      if (el) el.textContent = qty;
-      updateCartBadge();
-      loadDropdownCartItems();
-    }
-
-    async function loadProducts() {
-      try {
-        const res = await fetch('/api/products');
-        const products = await res.json();
-        const container = document.getElementById('productsGrid');
-        container.innerHTML = products.map(p => `
-          <div class="product-card">
-            <img src="${p.image}" alt="${p.name}" loading="lazy">
-            <h2>${p.name}</h2>
-            <p>${p.description || ''}</p>
-            <p class="price">₹${p.price.toLocaleString()}</p>
-            <div class="quantity-controls">
-              <button onclick="updateQuantity('${p.id}', -1)">-</button>
-              <span id="qty-${p.id}">0</span>
-              <button onclick="updateQuantity('${p.id}', 1)">+</button>
-            </div>
-            <button class="add-cart-btn" onclick="addToCart('${p.id}')">Add to Cart</button>
-            <button class="buy-now-btn" onclick="buyNow('${p.id}')">Buy Now</button>
-          </div>
-        `).join('');
-
-        cart.forEach(item => {
-          const el = document.getElementById(`qty-${item.id}`);
-          if (el) el.textContent = item.quantity;
-        });
-      } catch (err) {
-        alert('Failed to load products');
-      }
-    }
-
-    function buyNow(id) {
-      cart = [{ id, quantity: 1 }];
-      localStorage.setItem('cart', JSON.stringify(cart));
-      proceedToCheckout();
-    }
-
-    async function loadDropdownCartItems() {
-      const itemsDiv = document.getElementById('dropdownCartItems');
-      const totalSpan = document.getElementById('dropdownCartTotal');
-      if (cart.length === 0) {
-        itemsDiv.innerHTML = '<p>Your cart is empty</p>';
-        totalSpan.textContent = '0';
-        return;
-      }
-
-      const res = await fetch('/api/products');
-      const products = await res.json();
-      let total = 0;
-      const html = cart.map(item => {
-        const p = products.find(pr => pr.id === item.id);
-        if (!p) return '';
-        total += p.price * item.quantity;
-        return `
-          <div class="dropdown-cart-item">
-            <img src="${p.image}" alt="${p.name}">
-            <div>
-              <h4>${p.name}</h4>
-              <p>₹${p.price.toLocaleString()} × ${item.quantity}</p>
-            </div>
-            <button onclick="removeFromCart('${item.id}')">×</button>
-          </div>
-        `;
-      }).join('');
-      itemsDiv.innerHTML = html;
-      totalSpan.textContent = total.toLocaleString();
-    }
-
-    async function proceedToCheckout() {
-      const user = localStorage.getItem('loggedInUser');
-      if (!user) {
-        alert('Please login to checkout');
-        window.location.href = 'login.html';
-        return;
-      }
-      const userObj = JSON.parse(user);
-      const items = cart.map(i => ({ productId: i.id, quantity: i.quantity }));
-
-      try {
-        const res = await fetch('/api/create-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items })
-        });
-        const order = await res.json();
-        if (!res.ok) throw new Error(order.error || 'Order failed');
-
-        const options = {
-          key: 'rzp_test_RfiZOVuyueJdix',
-          amount: order.amount,
-          currency: order.currency,
-          name: 'C&R Building Solutions',
-          order_id: order.id,
-          handler: async (response) => {
-            const v = await fetch('/api/verify-payment', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                userId: userObj._id,
-                items: order.products,
-                amount: order.amount
-              })
-            });
-            const result = await v.json();
-            if (result.success) {
-              alert('Payment successful!');
-              localStorage.removeItem('cart');
-              cart = [];
-              updateCartBadge();
-              loadDropdownCartItems();
-              window.location.href = 'profile.html';
-            } else {
-              alert('Payment failed');
-            }
-          },
-          prefill: { name: userObj.name, email: userObj.email || '' },
-          theme: { color: '#EFB400' }
-        };
-        new Razorpay(options).open();
-      } catch (e) {
-        alert('Checkout error: ' + e.message);
-      }
-    }
-
-    // Dropdown toggle
-    const cartIcon = document.getElementById('cartIcon');
-    const dropdown = document.getElementById('cartDropdown');
-    cartIcon.addEventListener('click', (e) => {
-      e.stopPropagation();
-      dropdown.classList.toggle('hidden');
-      loadDropdownCartItems();
-    });
-    document.addEventListener('click', (e) => {
-      if (!cartIcon.contains(e.target) && !dropdown.contains(e.target)) {
-        dropdown.classList.add('hidden');
-      }
-    });
-
-    document.getElementById('checkoutBtn').onclick = proceedToCheckout;
-
-    // Init
-    loadProducts();
-    updateCartBadge();
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>

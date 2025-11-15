@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Profile | C&R Building Solutions</title>
-  <link rel="stylesheet" href="login.css">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
   <style>
+    .hidden { display: none !important; }
+    .notification { position: fixed; top: 20px; right: 20px; background: #EFB400; color: white; padding: 1rem; border-radius: 8px; z-index: 1000; }
     .profile-container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
     .profile-card { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); margin-bottom: 2rem; text-align: center; }
     .profile-card h1 { color: #EFB400; margin-bottom: 20px; }
@@ -27,6 +28,7 @@
       <img src="logo.png" alt="C&R Logo" height="70px">
     </div>
     <div class="nav">
+      <div class="navlinks"><a href="index.html" style="text-decoration: none; color: #EFB400;">Home</a></div>
       <div class="navlinks"><a href="about.html" style="text-decoration: none; color: #EFB400;">About Us</a></div>
       <div class="navlinks"><a href="services.html" style="text-decoration: none; color: #EFB400;">Services</a></div>
       <div class="navlinks"><a href="blog.html" style="text-decoration: none; color: #EFB400;">Blog</a></div>
@@ -36,9 +38,9 @@
       <div class="navlinks"><a href="faqs.html" style="text-decoration: none; color: #EFB400;">FAQs</a></div>
     </div>
     <div class="nav-auth">
-      <a href="login.html" id="loginBtn" class="auth-btn login hidden">Login</a>
-      <a href="register.html" id="signupBtn" class="auth-btn signup hidden">Sign Up</a>
-      <a href="profile.html" id="profileLink" class="navlinks profile-link">
+      <a href="login.html" id="loginBtn" class="auth-btn login">Login</a>
+      <a href="register.html" id="signupBtn" class="auth-btn signup" style="text-decoration: none; color:#8B6F47;">Sign Up</a>
+      <a href="profile.html" id="profileLink" class="navlinks profile-link hidden">
         <i class="fa-solid fa-user-circle"></i>
         <span id="profileName">Profile</span>
       </a>
@@ -51,26 +53,27 @@
 
   <div class="profile-container">
     <div class="profile-card">
-      <h1>Your Profile</h1>
+      <h1>User Profile</h1>
       <p><strong>Name:</strong> <span id="profileUserName"></span></p>
       <p><strong>Email:</strong> <span id="profileUserEmail"></span></p>
       <p><strong>User ID:</strong> <span id="profileUserID"></span></p>
-      <button id="logoutBtn">Log Out</button>
+      <button id="logoutBtn">Logout</button>
     </div>
 
     <div class="orders-section">
       <h2>Your Orders</h2>
-      <div id="ordersContainer"></div>
+      <div id="ordersContainer">Loading orders...</div>
     </div>
   </div>
 
-  <div id="cartDropdown" class="dropdown-cart hidden">
+  <!-- CART DROPDOWN -->
+  <div id="cartDropdown" class="dropdown-cart">
     <h3>Your Cart</h3>
     <div id="dropdownCartItems"></div>
     <div class="dropdown-cart-total">
       Total: ₹<span id="dropdownCartTotal">0</span>
     </div>
-    <button onclick="proceedToCheckout()">Proceed to Checkout</button>
+    <button id="checkoutBtn">Proceed to Checkout</button>
     <a href="shop.html">View Full Cart</a>
   </div>
 

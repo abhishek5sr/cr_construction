@@ -10,6 +10,10 @@ export default async function handler(req, res) {
 
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature, userId, items, amount } = req.body;
 
+  if (!userId || !items || !amount) {
+    return res.status(400).json({ success: false, error: 'Missing required fields' });
+  }
+
   try {
     const expected = crypto
       .createHmac('sha256', process.env.RAZORPAY_SECRET)
@@ -34,6 +38,7 @@ export default async function handler(req, res) {
 
     res.status(200).json({ success: true });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false });
   } finally {
     await client.close();

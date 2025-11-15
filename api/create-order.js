@@ -13,8 +13,9 @@ const razorpay = new Razorpay({
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { items } = req.body;
+  const { items, userId } = req.body;  // Accept userId from frontend
   if (!items || items.length === 0) return res.status(400).json({ error: 'Cart empty' });
+  if (!userId) return res.status(401).json({ error: 'User not authenticated' });
 
   try {
     await client.connect();
@@ -24,10 +25,10 @@ export default async function handler(req, res) {
     const products = [];
 
     for (const item of items) {
-      const product = await db.collection('products').findOne({ id: item.productId }); // ← Match `id`
+      const product = await db.collection('products').findOne({ id: item.productId.toString() }); // Force string
       if (!product) return res.status(404).json({ error: `Product not found: ${item.productId}` });
 
-      const qty = item.quantity || 1;
+      const qty = item.quantity > 0 ? item.quantity : 1;
       total += product.price * qty;
 
       products.push({
@@ -48,10 +49,12 @@ export default async function handler(req, res) {
       id: order.id,
       amount: order.amount,
       currency: order.currency,
-      products
+      products,
+      userId  // Return userId for frontend
     });
 
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Order creation failed' });
   } finally {
     await client.close();
